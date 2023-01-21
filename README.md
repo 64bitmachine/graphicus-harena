@@ -5,6 +5,9 @@
 
 ```bash
 sudo apt-get install libglfw3-dev
+sudo apt-get install libglew-dev
+sudo apt-get install mesa-utils
+sudo apt-get install cmake
 ```
 
 <!-- faq -->

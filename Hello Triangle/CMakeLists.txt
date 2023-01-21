@@ -16,7 +16,11 @@ include_directories(${GLEW_INCLUDE_DIRS})
 find_package(glfw3 3.3 REQUIRED)
 include_directories(${GLFW_INCLUDE_DIRS})
 
+
 add_executable(HelloWorld main.cpp)
+
+# copy shaders folder to build folder
+file(COPY shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 if (APPLE)
     message("APPLE : Build for MacOS")
