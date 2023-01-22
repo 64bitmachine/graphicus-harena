@@ -8,6 +8,7 @@
     #include <GL/gl.h>
 #endif
 
+#include "camera.h"
 
 // read shader file
 const char* readShaderSource(const char* filename) {
@@ -153,6 +154,9 @@ int main(int argc, char** argv) {
 
     // use program
     glUseProgram(program);
+
+    // camera
+    Camera* camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
     do {
         glClear(GL_COLOR_BUFFER_BIT);

@@ -16,6 +16,10 @@ include_directories(${GLEW_INCLUDE_DIRS})
 find_package(glfw3 3.3 REQUIRED)
 include_directories(${GLFW_INCLUDE_DIRS})
 
+# glm
+find_package(glm REQUIRED)
+include_directories(${GLM_INCLUDE_DIRS})
+
 
 add_executable(HelloWorld main.cpp)
 
@@ -27,7 +31,7 @@ if (APPLE)
     target_link_libraries(HelloWorld glfw GLEW::GLEW "-framework OpenGL")
 else()
     message("LINUX : Build for Linux")
-    target_link_libraries(HelloWorld ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLFW_LIBRARIES} glfw)
+    target_link_libraries(HelloWorld ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLFW_LIBRARIES} ${GLM_LIBRARIES} glfw)
 endif()
 
 # freeglut
