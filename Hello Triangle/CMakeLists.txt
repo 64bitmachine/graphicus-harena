@@ -1,5 +1,10 @@
-cmake_minimum_required(VERSION 3.0.0)
-project(HelloWorld VERSION 0.1.0)
+cmake_minimum_required(VERSION 3.2)
+
+# every cmake project should contain project() command
+project(HelloWorld 
+VERSION 0.1.0
+DESCRIPTION "Hello World"
+LANGUAGES CXX)
 
 include(CTest)
 enable_testing()
@@ -16,8 +21,15 @@ include_directories(${GLEW_INCLUDE_DIRS})
 find_package(glfw3 3.3 REQUIRED)
 include_directories(${GLFW_INCLUDE_DIRS})
 
+# glm
+find_package(glm REQUIRED)
+include_directories(${GLM_INCLUDE_DIRS})
 
-add_executable(HelloWorld main.cpp)
+
+add_executable(HelloWorld 
+main.cpp
+source/camera.cpp
+source/shader.cpp)
 
 # copy shaders folder to build folder
 file(COPY shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
@@ -27,7 +39,7 @@ if (APPLE)
     target_link_libraries(HelloWorld glfw GLEW::GLEW "-framework OpenGL")
 else()
     message("LINUX : Build for Linux")
-    target_link_libraries(HelloWorld ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLFW_LIBRARIES} glfw)
+    target_link_libraries(HelloWorld ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLFW_LIBRARIES} ${GLM_LIBRARIES} glfw)
 endif()
 
 # freeglut
