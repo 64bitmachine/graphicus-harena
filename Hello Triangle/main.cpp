@@ -8,80 +8,20 @@
     #include <GL/gl.h>
 #endif
 
-#include "camera.h"
+#include "source/camera.h"
+#include "source/shader.h"
 
-// read shader file
-const char* readShaderSource(const char* filename) {
-    FILE* fp = fopen(filename, "r");
-    if (fp == NULL) {
-        std::cout << "Failed to open file: " << filename << std::endl;
-        return NULL;
-    }
+// timing
+float deltaTime = 0.0f;	// time between current frame and last frame
+float lastFrame = 0.0f;
+bool  firstMouse = true;
+Camera* g_camera;
 
-    fseek(fp, 0, SEEK_END); // seek to end of file
-    long size = ftell(fp);  // get file size
-    fseek(fp, 0, SEEK_SET); // reset file pointer
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
 
-    char* buffer = new char[size + 1];
-    // read file into buffer. 1 byte at a time, size bytes, from fp
-    fread(buffer, 1, size, fp);
-    buffer[size] = '\0';    // null terminate buffer
-    fclose(fp);
-
-    return buffer;
-}
-
-// create shader
-GLuint createShader(GLenum shaderType, const char* shaderSource) {
-    GLuint shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, &shaderSource, NULL);
-    glCompileShader(shader);
-
-    GLint compiled;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-    if (!compiled) {
-        std::cout << "Failed to compile shader" << std::endl;
-        GLint logSize;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logSize);
-        char* logMsg = new char[logSize];
-        glGetShaderInfoLog(shader, logSize, NULL, logMsg);
-        std::cout << logMsg << std::endl;
-        delete[] logMsg;
-        return 0;
-    }
-
-    return shader;
-}
-
-// create program
-GLuint createProgram(const char* vertexShaderSource, const char* fragmentShaderSource) {
-
-    GLuint vertexShader = createShader(GL_VERTEX_SHADER, vertexShaderSource);
-    GLuint fragmentShader = createShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
-    GLuint program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glLinkProgram(program);
-
-    GLint linked;
-    glGetProgramiv(program, GL_LINK_STATUS, &linked);
-    if (!linked) {
-        std::cout << "Failed to link program" << std::endl;
-        GLint logSize;
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logSize);
-        char* logMsg = new char[logSize];
-        glGetProgramInfoLog(program, logSize, NULL, logMsg);
-        std::cout << logMsg << std::endl;
-        delete[] logMsg;
-        return 0;
-    }
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    return program;
-}
-
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
 
 void initialiseBuffer(GLuint* vbo, GLuint* vao) {
     GLfloat vertices[] = {
@@ -103,6 +43,43 @@ void initialiseBuffer(GLuint* vbo, GLuint* vao) {
     glBindVertexArray(0);
 }
 
+void processInput(GLFWwindow* window) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        g_camera->process_keyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        g_camera->process_keyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        g_camera->process_keyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        g_camera->process_keyboard(RIGHT, deltaTime);
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (firstMouse) {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+    lastX = xpos;
+    lastY = ypos;
+
+    g_camera->process_mouse_movement(xoffset, yoffset);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    g_camera->process_mouse_scroll(yoffset);
+}
 
 int main(int argc, char** argv) {
 
@@ -123,7 +100,7 @@ int main(int argc, char** argv) {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     #endif
 
-    GLFWwindow* window = glfwCreateWindow(1024, 768, "Hello World", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Hello World", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to open GLFW window" << std::endl;
         glfwTerminate();
@@ -131,6 +108,9 @@ int main(int argc, char** argv) {
     }
 
     glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     glewExperimental = true;
     if (glewInit() != GLEW_OK) {
@@ -140,26 +120,43 @@ int main(int argc, char** argv) {
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-
-    // read shader source
-    const char* vertexShaderSource = readShaderSource("shaders/vertex.glsl");
-    const char* fragmentShaderSource = readShaderSource("shaders/fragment.glsl");
-
     // create program
-    GLuint program = createProgram(vertexShaderSource, fragmentShaderSource);
+    Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
     // initialise buffer
     GLuint vbo, vao;
     initialiseBuffer(&vbo, &vao);
 
     // use program
-    glUseProgram(program);
+    shader->use();
 
     // camera
-    Camera* camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    g_camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+
+    // projection and view matrix
+    glm::mat4 projection;
+    glm::mat4 view;
+
+    float currentFrame;
 
     do {
+
+        // per-frame time logic
+        currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        processInput(window);
+
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // projection and view matrix
+        projection = glm::perspective(glm::radians(g_camera->get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        view = g_camera->get_view_matrix();
+
+        // set projection and view matrix
+        shader->setMat4("projection", projection);
+        shader->setMat4("view", view);
 
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 3);

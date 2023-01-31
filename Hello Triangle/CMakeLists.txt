@@ -1,5 +1,10 @@
-cmake_minimum_required(VERSION 3.0.0)
-project(HelloWorld VERSION 0.1.0)
+cmake_minimum_required(VERSION 3.2)
+
+# every cmake project should contain project() command
+project(HelloWorld 
+VERSION 0.1.0
+DESCRIPTION "Hello World"
+LANGUAGES CXX)
 
 include(CTest)
 enable_testing()
@@ -21,7 +26,10 @@ find_package(glm REQUIRED)
 include_directories(${GLM_INCLUDE_DIRS})
 
 
-add_executable(HelloWorld main.cpp)
+add_executable(HelloWorld 
+main.cpp
+source/camera.cpp
+source/shader.cpp)
 
 # copy shaders folder to build folder
 file(COPY shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

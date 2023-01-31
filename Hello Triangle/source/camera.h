@@ -45,9 +45,7 @@ class Camera {
     void update_camera_vectors();
 
 public:
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
-           glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
-           float yaw = YAW, float pitch = PITCH);
+    Camera(glm::vec3 position);
     Camera(float pos_x, float pos_y, float pos_z,
            float up_x, float up_y, float up_z,
            float yaw, float pitch);
@@ -58,6 +56,8 @@ public:
     void process_mouse_movement(float x_offset, float y_offset,
                                 bool constrain_pitch = true);
     void process_mouse_scroll(float y_offset);
+
+    float get_zoom() const;
 
 };
 

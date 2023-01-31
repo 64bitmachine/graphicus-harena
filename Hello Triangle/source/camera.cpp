@@ -15,14 +15,13 @@ void Camera::update_camera_vectors() {
     m_up = glm::normalize(glm::cross(m_right, m_front));
 }
 
-Camera::Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
-           glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
-           float yaw = YAW, float pitch = PITCH) : m_front(glm::vec3(0.0f, 0.0f, -1.0f)),
+Camera::Camera(glm::vec3 position) : m_front(glm::vec3(0.0f, 0.0f, -1.0f)),
            m_movement_speed(SPEED), m_mouse_sensitivity(SENSITIVITY), m_zoom(ZOOM) {
     m_position = position;
-    m_world_up = up;
-    m_yaw = yaw;
-    m_pitch = pitch;
+    m_world_up = glm::vec3(0.0f, 1.0f, 0.0f);
+    m_yaw = YAW;
+    m_pitch = PITCH;
+    m_zoom = ZOOM;
     update_camera_vectors();
 }
 
@@ -56,7 +55,7 @@ void Camera::process_keyboard(Cam_Movement direction, float delta_time) {
     }
 }
 
-void Camera::process_mouse_movement(float x_offset, float y_offset, bool constrain_pitch = true) {
+void Camera::process_mouse_movement(float x_offset, float y_offset, bool constrain_pitch) {
     x_offset *= m_mouse_sensitivity;
     y_offset *= m_mouse_sensitivity;
 
@@ -87,3 +86,5 @@ void Camera::process_mouse_scroll(float y_offset) {
         m_zoom = 45.0f;
     }
 }
+
+float Camera::get_zoom() const { return m_zoom; }
