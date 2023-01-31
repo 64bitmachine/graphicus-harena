@@ -11,6 +11,11 @@ sudo apt-get install libglm-dev
 sudo apt-get install cmake
 ```
 
+## List of Programs
+
+- [1. Hello Triangle - camera, shader class included](Hello%20Triangle)
+
+
 <!-- faq -->
 ## FAQ
 **Q:** which is better glfw3 or freeglut for graphics programming ?
