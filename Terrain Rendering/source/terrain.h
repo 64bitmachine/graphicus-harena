@@ -7,6 +7,18 @@
 struct terrain_data {
     unsigned char *heightmap;
     int size; // size of heightmap (should be 2^n)
+
+    // print data
+    void print() {
+        printf("terrain_data: size=%d", size);
+        // contents of heightmap
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                printf("%d ", heightmap[i + j * size]);
+            }
+            printf("\n");
+        }
+    }
 };
 
 class Terrain

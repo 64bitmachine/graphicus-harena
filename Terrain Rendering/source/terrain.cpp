@@ -1,4 +1,5 @@
 #include "terrain.h"
+#include "math_utils.h"
 
 Terrain::Terrain() {
     m_shader = NULL;
@@ -11,61 +12,68 @@ void Terrain::loadHeightMap(const char *filename) {
     m_data.heightmap = readRawFile(filename);
     m_data.size = 512;
 
-    // create vao
+    // create buffers
     glGenVertexArrays(1, &m_vao);
     glBindVertexArray(m_vao);
-
-    // create vbo
     glGenBuffers(1, &m_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-    glBufferData(GL_ARRAY_BUFFER, m_data.size * m_data.size * 3 * sizeof(float), NULL, GL_STATIC_DRAW);
-
-    // create ebo
     glGenBuffers(1, &m_ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_data.size * m_data.size * 6 * sizeof(unsigned int), NULL, GL_STATIC_DRAW);
 
     // create vertex data
-    float *vertices = new float[m_data.size * m_data.size * 3];
-    for (int z = 0; z < m_data.size; z++) {
-        for (int x = 0; x < m_data.size; x++) {
-            vertices[(x + z * m_data.size) * 3 + 0] = x;
-            vertices[(x + z * m_data.size) * 3 + 1] = getHeight(x, z);
-            vertices[(x + z * m_data.size) * 3 + 2] = z;
+    Vector3f *vertices = new Vector3f[m_data.size * m_data.size];
+    for (int i = 0; i < m_data.size; i++) {
+        for (int j = 0; j < m_data.size; j++) {
+            vertices[i + j * m_data.size] = Vector3f((float)i / 512, (float)getHeight(i, j) / 512, (float)j / 512);
         }
     }
 
-    // create index data
-    unsigned int *indices = new unsigned int[m_data.size * m_data.size * 6];
+    // add vertex data to buffer
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    glBufferData(GL_ARRAY_BUFFER, m_data.size * m_data.size * sizeof(Vector3f), vertices, GL_STATIC_DRAW);
+
+    // add index data to buffer
+    long numQuads = (m_data.size - 1) * (m_data.size - 1);
+    unsigned int *indices = new unsigned int[numQuads * 6];
+
+    // create indices
+    int index = 0;
     for (int z = 0; z < m_data.size - 1; z++) {
         for (int x = 0; x < m_data.size - 1; x++) {
-            indices[(x + z * m_data.size) * 6 + 0] = x + z * m_data.size;
-            indices[(x + z * m_data.size) * 6 + 1] = x + (z + 1) * m_data.size;
-            indices[(x + z * m_data.size) * 6 + 2] = x + 1 + z * m_data.size;
-            indices[(x + z * m_data.size) * 6 + 3] = x + 1 + z * m_data.size;
-            indices[(x + z * m_data.size) * 6 + 4] = x + (z + 1) * m_data.size;
-            indices[(x + z * m_data.size) * 6 + 5] = x + 1 + (z + 1) * m_data.size;
+            int topLeft = ((z + 1) * m_data.size) + x;
+            int topRight = topLeft + 1;
+            int bottomLeft = (z  * m_data.size) + x;
+            int bottomRight = bottomLeft + 1;
+
+            indices[index++] = topLeft;
+            indices[index++] = bottomLeft;
+            indices[index++] = topRight;
+            indices[index++] = topRight;
+            indices[index++] = bottomLeft;
+            indices[index++] = bottomRight;
         }
     }
 
-    // upload vertex data
-    glBufferSubData(GL_ARRAY_BUFFER, 0, m_data.size * m_data.size * 3 * sizeof(float), vertices);
+    // add index data to buffer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, numQuads * 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
 
-    // upload index data
-    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, m_data.size * m_data.size * 6 * sizeof(unsigned int), indices);
+    int pos_loc = 0;
+    glEnableVertexAttribArray(pos_loc);
 
-    // delete temporary data
-    delete[] vertices;
-    delete[] indices;
+    size_t numFloats = 0;
+    glVertexAttribPointer(pos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), (const GLvoid*)(numFloats * sizeof(float)));
+    numFloats += 3;
 
-    // setup vertex attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    // unbind
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
 }
 
 void Terrain::render() {
     glBindVertexArray(m_vao);
-    glDrawElements(GL_TRIANGLES, m_data.size * m_data.size * 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, (m_data.size - 1) * (m_data.size - 1) * 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
 }
 
 unsigned char Terrain::getHeight(int x, int z) {
