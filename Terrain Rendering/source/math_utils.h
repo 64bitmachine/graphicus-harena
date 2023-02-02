@@ -1,3 +1,6 @@
+#ifndef __MATH_UTILS_H__
+#define __MATH_UTILS_H__
+
 /*
 
 	Copyright 2014 Etay Meiri
@@ -127,6 +130,10 @@ struct Vector3f {
 
 	void Print() const {
 		printf("(%.02f, %.02f, %.02f)", x, y, z);
+	}
+
+	bool operator==(const Vector3f& other) const {
+		return (x == other.x && y == other.y && z == other.z);
 	}
 };
 
@@ -516,3 +523,5 @@ public:
 		m[3][3] = 0.0;
 	}
 };
+
+#endif // __MATH_UTILS_H__

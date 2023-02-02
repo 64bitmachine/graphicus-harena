@@ -8,5 +8,5 @@ out vec3 color;
 
 void main() {
     gl_Position = projection * view * vec4(aPos, 1.0);
-    color = vec3(aPos.y);
+    color = vec3((aPos.y / 5)*0.5 + 0.1);
 }

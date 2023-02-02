@@ -1,16 +1,19 @@
 #include "terrain.h"
 #include "math_utils.h"
+#include "fractalterrain.h"
 
 Terrain::Terrain() {
     m_shader = NULL;
+    m_scale = 4.0f;
 }
 
 Terrain::~Terrain() {
 }
 
 void Terrain::loadHeightMap(const char *filename) {
-    m_data.heightmap = readRawFile(filename);
-    m_data.size = 512;
+    // m_data.heightmap = readRawFile(filename);
+    m_data.size = 256;
+    m_data.heightmap = terrainFromFaultFormation(m_data.size, 200);
 
     // create buffers
     glGenVertexArrays(1, &m_vao);
@@ -22,7 +25,10 @@ void Terrain::loadHeightMap(const char *filename) {
     Vector3f *vertices = new Vector3f[m_data.size * m_data.size];
     for (int i = 0; i < m_data.size; i++) {
         for (int j = 0; j < m_data.size; j++) {
-            vertices[i + j * m_data.size] = Vector3f((float)i / 512, (float)getHeight(i, j) / 512, (float)j / 512);
+            vertices[i + j * m_data.size] = Vector3f((float)i / m_data.size, (float)getHeight(i, j) / 50, (float)j / m_data.size);
+            // scale x and z coordinates
+            vertices[i + j * m_data.size].x *= m_scale;
+            vertices[i + j * m_data.size].z *= m_scale;
         }
     }
 
