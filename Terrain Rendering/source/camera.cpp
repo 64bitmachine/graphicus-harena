@@ -15,7 +15,7 @@ void Camera::update_camera_vectors() {
     m_up = glm::normalize(glm::cross(m_right, m_front));
 }
 
-Camera::Camera(glm::vec3 position) : m_front(glm::vec3(0.0f, 0.0f, -1.0f)),
+Camera::Camera(glm::vec3 position) : m_front(glm::vec3(0.0f, -0.35f, 1.0f)),
            m_movement_speed(SPEED), m_mouse_sensitivity(SENSITIVITY), m_zoom(ZOOM) {
     m_position = position;
     m_world_up = glm::vec3(0.0f, 1.0f, 0.0f);

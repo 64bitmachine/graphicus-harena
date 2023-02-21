@@ -18,8 +18,8 @@ float lastFrame = 0.0f;
 bool  firstMouse = true;
 Camera* g_camera;
 
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1080;
 const char* WINDOW_NAME = "Terrain Rendering";
 
 float lastX = SCR_WIDTH / 2.0f;
@@ -127,11 +127,12 @@ int main(int argc, char** argv) {
     terrain->useProgram();
 
     // camera
-    g_camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    g_camera = new Camera(glm::vec3(200.0f, 400.0f, -150.0f));
 
     // projection and view matrix
     glm::mat4 projection;
     glm::mat4 view;
+    glm::mat4 model;
 
     float currentFrame;
 
@@ -147,13 +148,13 @@ int main(int argc, char** argv) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // projection and view matrix
-        projection = glm::perspective(glm::radians(g_camera->get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(g_camera->get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 2000.0f);
         view = g_camera->get_view_matrix();
 
         // set projection and view matrix
         terrain->getShader()->setMat4("projection", projection);
         terrain->getShader()->setMat4("view", view);
-
+        
         terrain->render();
 
         glfwSwapBuffers(window);

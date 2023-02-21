@@ -4,9 +4,14 @@ layout (location = 0) in vec3 aPos;
 uniform mat4 view;
 uniform mat4 projection;
 
+uniform float gMinHeight;
+uniform float gMaxHeight;
 out vec3 color;
 
 void main() {
     gl_Position = projection * view * vec4(aPos, 1.0);
-    color = vec3((aPos.y / 5)*0.5 + 0.1);
+    float dh = gMaxHeight - gMinHeight;
+    float height_ratio = (aPos.y - gMinHeight) / dh;
+    float c = 0.8 * height_ratio + 0.2;
+    color = vec3(c);
 }
