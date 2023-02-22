@@ -1,4 +1,7 @@
 <!-- terrain definition -->
+# Terrain Rendering
+This project renders a terrain using OpenGL. Terrain is computed using fault formation algorithm.
+Then FIR filter is applied to the terrain to smoothen the terrain.
 
 ## Cam Support
 The project includes a camera class that implements a first-person camera. The camera can be moved around the scene using the W, A, S, and D keys, and it can be rotated using the mouse.
@@ -25,4 +28,4 @@ To run the project, you will need a C++ compiler and an OpenGl implementation. O
     make
 
 ### Run the program
-    ./HelloWorld
+    ./Terrain_Rendering
