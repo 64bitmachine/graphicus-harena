@@ -18,8 +18,8 @@ float lastFrame = 0.0f;
 bool  firstMouse = true;
 Camera* g_camera;
 
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1080;
+const unsigned int SCR_WIDTH = 1200;
+const unsigned int SCR_HEIGHT = 800;
 const char* WINDOW_NAME = "Terrain Rendering";
 
 float lastX = SCR_WIDTH / 2.0f;
@@ -113,6 +113,11 @@ int main(int argc, char** argv) {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glFrontFace(GL_CW);
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 
     glewExperimental = true;
     if (glewInit() != GLEW_OK) {
@@ -127,7 +132,7 @@ int main(int argc, char** argv) {
     terrain->useProgram();
 
     // camera
-    g_camera = new Camera(glm::vec3(200.0f, 400.0f, -150.0f));
+    g_camera = new Camera(glm::vec3(200.0f, 200.0f, 400.0f));
 
     // projection and view matrix
     glm::mat4 projection;
@@ -145,10 +150,11 @@ int main(int argc, char** argv) {
 
         processInput(window);
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // projection and view matrix
-        projection = glm::perspective(glm::radians(g_camera->get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 2000.0f);
+        projection = glm::perspective(glm::radians(g_camera->get_zoom()),
+         (float)SCR_WIDTH / (float)SCR_HEIGHT, 25.0f, 2000.0f);
         view = g_camera->get_view_matrix();
 
         // set projection and view matrix
