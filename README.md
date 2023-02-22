@@ -14,6 +14,7 @@ sudo apt-get install cmake
 ## List of Programs
 
 - [1. Hello Triangle - camera, shader class included](Hello%20Triangle)
+- [2. Terrain Rendering](Terrain%20Rendering)
 
 
 <!-- faq -->
