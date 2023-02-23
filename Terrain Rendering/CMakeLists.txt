@@ -28,6 +28,7 @@ include_directories(${GLM_INCLUDE_DIRS})
 
 add_executable(Terrain_Rendering 
 main.cpp
+source/array2d.cpp
 source/terrain.cpp
 source/camera.cpp
 source/shader.cpp)

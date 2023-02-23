@@ -4,26 +4,22 @@
 template <typename T>
 class Array2D {
 public:
-    Array2D(int width, int height) {
-        m_width = width;
-        m_height = height;
-        m_data = new T[width * height];
-    }
 
-    ~Array2D() {
-        delete[] m_data;
-    }
+    Array2D();
 
-    T& operator()(int x, int y) {
-        return m_data[y * m_width + x];
-    }
+    Array2D(int width, int height);
 
-    const T& operator()(int x, int y) const {
-        return m_data[y * m_width + x];
-    }
+    ~Array2D();
 
-    int width() const { return m_width; }
-    int height() const { return m_height; }
+    T& operator()(int x, int y);
+
+    const T& operator()(int x, int y) const ;
+
+    int width() const;
+    int height() const;
+
+    // initialize m_data using = operator
+    void operator=(T* value) ;
 
 private:
     T* m_data;

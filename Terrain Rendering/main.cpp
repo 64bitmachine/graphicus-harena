@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-    Terrain *terrain = new Terrain();
+    Terrain *terrain = new Terrain(256);
     terrain->loadHeightMap("/home/dinesh/Downloads/heightmap.raw");
     terrain->useProgram();
 
