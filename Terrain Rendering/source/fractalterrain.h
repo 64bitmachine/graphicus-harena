@@ -87,27 +87,6 @@ float* terrainFromFaultFormation(int terrain_size, int iterations, float terrain
         }
     }
 
-    // find min and max height
-    for (long i = 0; i < terrain_size * terrain_size; i++) {
-        if (terrain[i] > maxHeight) maxHeight = terrain[i];
-        if (terrain[i] < minHeight) minHeight = terrain[i];
-    }
-
-    // convert to unsigned char
-    // unsigned char* terrain_uchar = new unsigned char[terrain_size * terrain_size];
-    float hr;
-    for (long i = 0; i < terrain_size * terrain_size; i++) {
-        hr = (terrain[i] - minHeight) / (maxHeight - minHeight);
-        terrain[i] = terrain_min_height + hr * delta_height;
-        if (hr > 1.0f || hr < 0.0f) {
-            printf("hr: %f\n", hr);
-        }
-        // terrain_uchar[i] = (unsigned char) terrain[i];
-    }
-    printf("\n");
-
-    // delete[] terrain;
-
     return terrain;
 }
 

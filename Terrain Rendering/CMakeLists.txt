@@ -6,6 +6,9 @@ VERSION 0.1.0
 DESCRIPTION "Terrain Rendering"
 LANGUAGES CXX)
 
+# c++17 flag
+# set(CMAKE_CXX_STANDARD 17)
+
 include(CTest)
 enable_testing()
 
@@ -26,12 +29,12 @@ find_package(glm REQUIRED)
 include_directories(${GLM_INCLUDE_DIRS})
 
 
-add_executable(Terrain_Rendering 
+add_executable(Terrain_Rendering
 main.cpp
-source/array2d.cpp
 source/terrain.cpp
 source/camera.cpp
-source/shader.cpp)
+source/shader.cpp
+source/array2d.cpp)
 
 # copy shaders folder to build folder
 file(COPY shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
