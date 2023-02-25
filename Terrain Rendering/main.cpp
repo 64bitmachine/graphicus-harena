@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glFrontFace(GL_CW);
+    glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-    Terrain *terrain = new Terrain();
+    Terrain *terrain = new Terrain(256);
     terrain->loadHeightMap("/home/dinesh/Downloads/heightmap.raw");
     terrain->useProgram();
 
