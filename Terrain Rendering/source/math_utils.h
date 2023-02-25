@@ -33,6 +33,25 @@ float RandomFloat() {
 	return ((float) random() / Max);
 }
 
+float RandomFloatRange(float start, float end) {
+	assert(start != end);
+
+	float d = end - start;
+	float rv = start + d * RandomFloat();
+	return rv;
+}
+
+int nextPowerOfTwo(int n) {
+	assert(n > 0);
+	int i = 1;
+	if (n == 1)
+		return 2;
+	while (i < n) {
+		i *= 2;
+	}
+	return i;
+}
+
 struct Vector2i {
 	int x;
 	int y;

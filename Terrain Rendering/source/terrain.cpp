@@ -5,7 +5,7 @@
 Terrain::Terrain(int size): m_size(size) {
     m_shader = NULL;
     m_scale = 4.0f;
-    m_heightmap = new Array2D<float>(m_size, m_size, 0.0f, 300.0f);
+    m_heightmap = new Array2D<float>(m_size, m_size, 0.0f, 250.0f);
 }
 
 Terrain::~Terrain() {
@@ -13,8 +13,9 @@ Terrain::~Terrain() {
 
 void Terrain::loadHeightMap(const char *filename) {
     // m_data.heightmap = readRawFile(filename);
-    m_heightmap->init(terrainFromFaultFormation(m_size, 500, 
-                m_heightmap->getMinHeight(), m_heightmap->getMaxHeight(), 0.5));
+    // m_heightmap->init(terrainFromFaultFormation(m_size, 500, 
+    //             m_heightmap->getMinHeight(), m_heightmap->getMaxHeight(), 0.5));
+    m_heightmap->init(midpointDisplacement(m_size, 1));
     m_heightmap->Normalize();
     // m_data.print();
 

@@ -90,4 +90,98 @@ float* terrainFromFaultFormation(int terrain_size, int iterations, float terrain
     return terrain;
 }
 
+void diamondStep(int terrain_size, int rectSize, float currHeight, float* terrain) {
+    int halfRectSize = rectSize / 2;
+
+    for (int z = 0; z < terrain_size; z += rectSize) {
+        for (int x = 0; x < terrain_size; x += rectSize) {
+            int nextX = (x + rectSize) % terrain_size;
+            int nextZ = (z + rectSize) % terrain_size;
+
+            if (nextX < x) {
+                nextX = terrain_size - 1;
+            }
+
+            if (nextZ < z) {
+                nextZ = terrain_size - 1;
+            }
+
+            float topLeft = terrain[x + z * terrain_size];
+            float topRight = terrain[nextX + z * terrain_size];
+            float bottomLeft = terrain[x + nextZ * terrain_size];
+            float bottomRight = terrain[nextX + nextZ * terrain_size];
+
+            int midX = (x + halfRectSize) % terrain_size;
+            int midZ = (z + halfRectSize) % terrain_size;
+
+            float randHeight = RandomFloatRange(currHeight, -currHeight);
+            float midHeight = (topLeft + topRight + bottomLeft + bottomRight) / 4.0f;
+
+            terrain[midX + midZ * terrain_size] = midHeight + randHeight;
+        }
+    }
+}
+
+void squareStep(int terrain_size, int rectSize, float currHeight, float* terrain) {
+    int halfRectSize = rectSize / 2;
+
+    for (int z = 0; z < terrain_size; z += rectSize) {
+        for (int x = 0; x < terrain_size; x += rectSize) {
+            int nextX = (x + rectSize) % terrain_size;
+            int nextZ = (z + rectSize) % terrain_size;
+
+            if (nextX < x) {
+                nextX = terrain_size - 1;
+            }
+
+            if (nextZ < z) {
+                nextZ = terrain_size - 1;
+            }
+
+            int midX = (x + halfRectSize) % terrain_size;
+            int midZ = (z + halfRectSize) % terrain_size;
+
+            int prevMidX = (x - halfRectSize + terrain_size) % terrain_size;
+            int prevMidZ = (z - halfRectSize + terrain_size) % terrain_size;
+
+            float currTopLeft = terrain[x + z * terrain_size];
+            float currTopRight = terrain[nextX + z * terrain_size];
+            float currCenter = terrain[midX + midZ * terrain_size];
+            float prevZCenter = terrain[midX + prevMidZ * terrain_size];
+            float currBottomLeft = terrain[x + nextZ * terrain_size];
+            float prevXCenter = terrain[prevMidX + midZ * terrain_size];
+
+            float currLeftMid = (currTopLeft + currBottomLeft + currCenter + prevXCenter) / 4.0f + RandomFloatRange(-currHeight, currHeight);
+            float currTopMid = (currTopLeft + currTopRight + currCenter + prevZCenter) / 4.0f + RandomFloatRange(-currHeight, currHeight);
+
+            terrain[midX + z * terrain_size] = currTopMid;
+            terrain[x + midZ * terrain_size] = currLeftMid;
+        }
+    }
+}
+
+float* midpointDisplacement(int terrainSize, float roughness) {
+    float* terrain = new float[terrainSize * terrainSize];
+    // initialize terrain
+    for (long i = 0; i < terrainSize * terrainSize; i++) {
+        terrain[i] = 0.0f;
+    }
+    int rectSize = nextPowerOfTwo(terrainSize);
+    float currHeight = (float) terrainSize / 2.0f;
+    float heightReduce = pow(2.0f, -roughness);
+    printf("rectSize: %d, currHeight: %f, heightReduce: %f\n", rectSize, currHeight, heightReduce);
+
+    while (rectSize > 0) {
+        // diamond step
+        diamondStep(terrainSize, rectSize, currHeight, terrain);
+        // square step
+        squareStep(terrainSize, rectSize, currHeight, terrain);
+
+        rectSize /= 2;
+        currHeight *= heightReduce;
+    }
+    
+    return terrain;
+}
+
 #endif // __FRACTALTERRAIN_H__
