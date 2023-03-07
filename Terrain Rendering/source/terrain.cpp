@@ -3,7 +3,7 @@
 
 void Vertex::init(const Terrain *terrain, int x, int z) {
     position = Vector3f(x * terrain->m_scale, (*terrain->m_heightmap)(x, z), z * terrain->m_scale);
-    // texCoords = Vector2f((float)x / (float)terrain->m_heightmap->width(), (float)z / (float)terrain->m_heightmap->height());
+    texCoords = Vector2f((float)x / (float)terrain->m_heightmap->width(), (float)z / (float)terrain->m_heightmap->height());
 }
 
 Terrain::Terrain(int size): m_size(size) {
@@ -68,12 +68,17 @@ void Terrain::loadHeightMap(const char *filename) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, numQuads * 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
 
-    int pos_loc = 0;
-    glEnableVertexAttribArray(pos_loc);
-
+    int pos_loc = 0;    // position attribute location
+    int tex_loc = 1;    // texture attribute location
     size_t numFloats = 0;
+    
+    glEnableVertexAttribArray(pos_loc);
     glVertexAttribPointer(pos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)(numFloats * sizeof(float)));
     numFloats += 3;
+
+    glEnableVertexAttribArray(tex_loc);
+    glVertexAttribPointer(tex_loc, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)(numFloats * sizeof(float)));
+    numFloats += 2;
 
     // unbind
     glBindVertexArray(0);

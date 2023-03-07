@@ -10,7 +10,7 @@ class Terrain;
 
 struct Vertex {
         Vector3f position;
-        // Vector2f texCoords;
+        Vector2f texCoords;
 
         void init(const Terrain *terrain, int x, int z);
 };
