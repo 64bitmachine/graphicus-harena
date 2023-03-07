@@ -1,6 +1,10 @@
 #include "terrain.h"
-#include "math_utils.h"
 #include "fractalterrain.h"
+
+void Vertex::init(const Terrain *terrain, int x, int z) {
+    position = Vector3f(x * terrain->m_scale, (*terrain->m_heightmap)(x, z), z * terrain->m_scale);
+    // texCoords = Vector2f((float)x / (float)terrain->m_heightmap->width(), (float)z / (float)terrain->m_heightmap->height());
+}
 
 Terrain::Terrain(int size): m_size(size) {
     m_shader = NULL;
@@ -26,16 +30,16 @@ void Terrain::loadHeightMap(const char *filename) {
     glGenBuffers(1, &m_ebo);
 
     // create vertex data
-    Vector3f *vertices = new Vector3f[m_heightmap->width() * m_heightmap->height()];
+    Vertex *vertices = new Vertex[m_heightmap->width() * m_heightmap->height()];
     for (int i = 0; i < m_heightmap->width(); i++) {
         for (int j = 0; j < m_heightmap->height(); j++) {
-            vertices[i * m_heightmap->width() + j] = Vector3f(i*m_scale, (*m_heightmap)(i, j), j*m_scale);
+            vertices[i * m_heightmap->width() + j].init(this, i, j);
         }
     }
 
     // add vertex data to buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-    glBufferData(GL_ARRAY_BUFFER, m_heightmap->width() * m_heightmap->height() * sizeof(Vector3f), 
+    glBufferData(GL_ARRAY_BUFFER, m_heightmap->width() * m_heightmap->height() * sizeof(Vertex), 
                                 vertices, GL_STATIC_DRAW);
 
     // add index data to buffer
@@ -68,7 +72,7 @@ void Terrain::loadHeightMap(const char *filename) {
     glEnableVertexAttribArray(pos_loc);
 
     size_t numFloats = 0;
-    glVertexAttribPointer(pos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3f), (const GLvoid*)(numFloats * sizeof(float)));
+    glVertexAttribPointer(pos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)(numFloats * sizeof(float)));
     numFloats += 3;
 
     // unbind

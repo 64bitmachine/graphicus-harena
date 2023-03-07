@@ -28,12 +28,12 @@
 #define ToRadian(x) (float)(((x) * M_PI / 180.0f))
 #define ToDegree(x) (float)(((x) * 180.0f / M_PI))
 
-float RandomFloat() {
+static float RandomFloat() {
 	float Max = RAND_MAX;
 	return ((float) random() / Max);
 }
 
-float RandomFloatRange(float start, float end) {
+static float RandomFloatRange(float start, float end) {
 	assert(start != end);
 
 	float d = end - start;
@@ -41,7 +41,7 @@ float RandomFloatRange(float start, float end) {
 	return rv;
 }
 
-int nextPowerOfTwo(int n) {
+static int nextPowerOfTwo(int n) {
 	assert(n > 0);
 	int i = 1;
 	if (n == 1)

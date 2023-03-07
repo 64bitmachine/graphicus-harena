@@ -4,9 +4,18 @@
 #include <GL/glew.h>
 #include "shader.h"
 #include "array2d.h"
+#include "math_utils.h"
 
-class Terrain
-{
+class Terrain;
+
+struct Vertex {
+        Vector3f position;
+        // Vector2f texCoords;
+
+        void init(const Terrain *terrain, int x, int z);
+};
+
+class Terrain {
 public:
     Terrain(int size);
     ~Terrain();
@@ -17,7 +26,10 @@ public:
     Shader* getShader();
     
 
-protected:
+private:
+
+    friend struct Vertex;
+
     Array2D<float> *m_heightmap;
     int m_size; // size of heightmap (x, z are the same)
     float m_scale;
