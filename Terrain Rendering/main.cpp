@@ -119,6 +119,11 @@ int main(int argc, char** argv) {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
+    // Hardware Specification
+    int max_texture_units = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_units);
+    std::cout << "Max texture units: " << max_texture_units << std::endl;
+
     glewExperimental = true;
     if (glewInit() != GLEW_OK) {
         std::cout << "Failed to initialize GLEW" << std::endl;

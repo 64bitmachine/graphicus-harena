@@ -28,13 +28,15 @@ include_directories(${GLFW_INCLUDE_DIRS})
 find_package(glm REQUIRED)
 include_directories(${GLM_INCLUDE_DIRS})
 
-
 add_executable(Terrain_Rendering
 main.cpp
 source/terrain.cpp
 source/camera.cpp
 source/shader.cpp
-source/array2d.cpp)
+source/array2d.cpp
+source/texture.cpp
+thirdparty/stb_image.cpp
+)
 
 # copy shaders folder to build folder
 file(COPY shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
