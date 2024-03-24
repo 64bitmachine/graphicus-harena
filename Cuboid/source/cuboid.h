@@ -4,12 +4,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 
+#include "line.h"
+
 class Cuboid {
 private:
     glm::vec3 center;
     float length, breadth, height;
     glm::vec3 upVector;
     glm::vec3 rightVector;
+
+    LineSegment *upAxis, *rightAxis, *frontAxis;
 
     GLuint VAO, VBO;
     std::vector<GLfloat> vertices;
@@ -35,6 +39,13 @@ public:
 
         // Unbind VAO
         glBindVertexArray(0);
+
+        int lengthAxis = 2;
+
+        // Initialize upAxis, rightAxis, and frontAxis
+        upAxis = new LineSegment(lengthAxis, upVector, center);
+        rightAxis = new LineSegment(lengthAxis, rightVector, center);
+        frontAxis = new LineSegment(lengthAxis, glm::cross(upVector, rightVector), center);
     }
 
     ~Cuboid() {
@@ -47,6 +58,11 @@ public:
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
         glBindVertexArray(0);
+
+        // Render upAxis, rightAxis, and frontAxis
+        upAxis->render();
+        rightAxis->render();
+        frontAxis->render();
     }
 
     // Method to calculate vertices based on center, length, breadth, and height
