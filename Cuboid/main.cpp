@@ -194,9 +194,6 @@ int main(int argc, char** argv) {
     Cuboid* cuboid = new Cuboid(glm::vec3(0.0f), 2.0f, 1.0f, 1.5f, 
     glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-    // use program
-    shader->use();
-
     // camera
     g_camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
 
@@ -207,6 +204,9 @@ int main(int argc, char** argv) {
     float currentFrame;
 
     do {
+
+        // use program
+        shader->use();
 
         // per-frame time logic
         currentFrame = glfwGetTime();
@@ -225,7 +225,7 @@ int main(int argc, char** argv) {
         shader->setMat4("projection", projection);
         shader->setMat4("view", view);
 
-        cuboid->render();
+        cuboid->render(projection, view);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
