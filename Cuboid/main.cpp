@@ -16,6 +16,7 @@
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 bool  firstMouse = true;
+bool isMouseCameraActive = false;
 Camera* g_camera;
 
 const unsigned int SCR_WIDTH = 800;
@@ -43,6 +44,59 @@ ScaleDimension getScaleDimension(glm::vec2 mouseDragVec, glm::vec3 cuboidUpVec, 
         return LENGTH_HEIGHT;
     }
     // If you want to consider BREADTH_HEIGHT as well, you can compare the magnitudes of the other two projected vectors.
+}
+
+glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
+    // // Invert mouseY to match OpenGL coordinate system
+    // mouseY = screenHeight - mouseY;
+
+    // // Convert mouse position to normalized device coordinates (NDC)
+    // float x = (2.0f * mouseX) / screenWidth - 1.0f;
+    // float y = (2.0f * mouseY) / screenHeight - 1.0f;
+
+    // // Construct clip space coordinates
+    // glm::vec4 clipSpacePos(x, y, -1.0f, 1.0f);
+
+    // // Invert projection matrix
+    // glm::mat4 invertedProjectionMatrix = glm::inverse(projectionMatrix);
+
+    // // Obtain eye space coordinates
+    // glm::vec4 eyeSpacePos = invertedProjectionMatrix * clipSpacePos;
+    // eyeSpacePos.z = -1.0f;
+    // eyeSpacePos.w = 0.0f;
+
+    // // Invert view matrix
+    // glm::mat4 invertedViewMatrix = glm::inverse(viewMatrix);
+
+    // // Obtain world space coordinates
+    // glm::vec4 worldSpacePos = invertedViewMatrix * eyeSpacePos;
+    // worldSpacePos /= worldSpacePos.w;
+
+    // return glm::vec3(worldSpacePos);
+
+
+    // ================
+
+    float x,y,z;
+    x = float((mouseX / SCR_WIDTH) * 2 - 1);
+    y = float(1 - (mouseY / SCR_HEIGHT) * 2);
+    printf("mouse click pos: %f, %f\n", x, y);
+    glReadPixels(mouseX, mouseY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
+
+    printf("z value: %f\n", z);
+
+    glm::mat4 inv_projection = glm::inverse(projectionMatrix * viewMatrix);
+
+    glm::vec4 pr = inv_projection*glm::vec4(x,y,-z,1.0f);
+    pr = pr/pr.w;
+    glm::vec4 pr1 = inv_projection*glm::vec4(x,y,z,1.0f);
+    pr1 = pr1/pr1.w;
+    // cout << glm::to_string(pr) << endl;
+    // cout << glm::to_string(pr1) << endl;
+    pr = pr + glm::normalize(pr1-pr);
+    // glm::vec4 pos = inv_view*pr;
+    
+    return glm::vec3(pr.x, pr.y, pr.z);
 }
 
 void initialiseBuffer(GLuint* vbo, GLuint* vao) {
@@ -77,6 +131,13 @@ void processInput(GLFWwindow* window) {
         g_camera->process_keyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         g_camera->process_keyboard(RIGHT, deltaTime);
+
+    // Toggle mouse camera mode using C
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+        isMouseCameraActive = !isMouseCameraActive;
+
+        printf("Mouse camera mode: %s\n", isMouseCameraActive ? "Active" : "Inactive");
+    }
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -110,7 +171,9 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     lastX = xpos;
     lastY = ypos;
 
-    g_camera->process_mouse_movement(xoffset, yoffset);
+    if (isMouseCameraActive) {
+        g_camera->process_mouse_movement(xoffset, yoffset);
+    }
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
@@ -123,12 +186,25 @@ bool isMouseClicked = false;
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        // Get current mouse position
-        glfwGetCursorPos(window, &clickX, &clickY);
         isMouseClicked = true;
 
+        double mouseX, mouseY;
+        glfwGetCursorPos(window, &mouseX, &mouseY);
+
         // print cursor position
-        std::cout << "Cursor position: " << clickX << ", " << clickY << std::endl;
+        std::cout << "Cursor position: " << mouseX << ", " << mouseY << std::endl;
+
+        int screenWidth, screenHeight;
+        glfwGetWindowSize(window, &screenWidth, &screenHeight);
+
+        // Example view and projection matrices (you need to replace these with your actual matrices)
+        glm::mat4 viewMatrix = g_camera->get_view_matrix();
+        glm::mat4 projectionMatrix = glm::perspective(glm::radians(g_camera->get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+        glm::vec3 worldPos = screenToWorld(window, mouseX, mouseY, screenWidth, screenHeight, viewMatrix, projectionMatrix);
+
+        // Output the corresponding 3D position in the scene
+        printf("World Position: (%f, %f, %f)\n", worldPos.x, worldPos.y, worldPos.z);
     } if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
         isMouseClicked = false;
         
@@ -180,6 +256,14 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
+	// setup opengl options
+	glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_CULL_FACE);
+	// glEnable(GL_BLEND);
+	// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
@@ -214,8 +298,9 @@ int main(int argc, char** argv) {
 
         processInput(window);
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        
         // projection and view matrix
         projection = glm::perspective(glm::radians(g_camera->get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         view = g_camera->get_view_matrix();

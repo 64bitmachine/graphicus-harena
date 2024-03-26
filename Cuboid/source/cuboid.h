@@ -78,12 +78,6 @@ public:
         glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
         glBindVertexArray(0);
 
-        for(GraphicalObject* child : children) {
-            child->setProjMat(projMat);
-            child->setViewMat(viewMat);
-            child->render();
-        }
-
         // glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     }
 

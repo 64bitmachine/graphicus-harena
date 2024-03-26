@@ -27,6 +27,12 @@ class GraphicalObject {
         void render() {
             shader->use();
             nextFrame();
+
+            for(GraphicalObject* child : children) {
+                child->setProjMat(projMat);
+                child->setViewMat(viewMat);
+                child->render();
+            }
         }
 
         virtual void nextFrame() = 0;
