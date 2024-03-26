@@ -203,10 +203,9 @@ int main(int argc, char** argv) {
 
     float currentFrame;
 
-    do {
+    cuboid->setShader(shader);
 
-        // use program
-        shader->use();
+    do {
 
         // per-frame time logic
         currentFrame = glfwGetTime();
@@ -222,10 +221,13 @@ int main(int argc, char** argv) {
         view = g_camera->get_view_matrix();
 
         // set projection and view matrix
-        shader->setMat4("projection", projection);
-        shader->setMat4("view", view);
+        // shader->setMat4("projection", projection);
+        // shader->setMat4("view", view);
 
-        cuboid->render(projection, view);
+        cuboid->setProjMat(&projection);
+        cuboid->setViewMat(&view);
+
+        cuboid->render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

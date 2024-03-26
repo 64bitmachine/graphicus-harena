@@ -5,25 +5,24 @@
 #include <vector>
 
 #include "line.h"
-#include "shader.h"
+#include "graphicalobject.h"
 
-class Cuboid {
+class Cuboid : public GraphicalObject {
 private:
     glm::vec3 center;
     float length, breadth, height;
     glm::vec3 upVector;
     glm::vec3 rightVector;
 
-    LineSegment *upAxis, *rightAxis, *frontAxis;
-
-    GLuint VAO, VBO;
+    GLuint VBO;
     std::vector<GLfloat> vertices;
-
-    Shader* lineShader;
 
 public:
     Cuboid(glm::vec3 center, float length, float breadth, float height, glm::vec3 upVector, glm::vec3 rightVector) :
         center(center), length(length), breadth(breadth), height(height), upVector(upVector), rightVector(rightVector) {
+        
+        name = "cuboid";
+        
         // Calculate vertices based on center, length, breadth, and height
         calculateVertices();
 
@@ -45,40 +44,47 @@ public:
 
         int lengthAxis = 4;
 
-        lineShader = new Shader("shaders/line.vs", "shaders/line.fs");
+        Shader *lineShader = new Shader("shaders/line.vs", "shaders/line.fs");
+        LineSegment *upAxis, *rightAxis, *frontAxis;
 
         // Initialize upAxis, rightAxis, and frontAxis
-        upAxis = new LineSegment(lengthAxis, upVector, center, glm::vec3(1.0f, 0.0f, 0.0f));
-        rightAxis = new LineSegment(lengthAxis, rightVector, center, glm::vec3(0.0f, 1.0f, 0.0f));
-        frontAxis = new LineSegment(lengthAxis, glm::cross(upVector, rightVector), center, glm::vec3(0.0f, 0.0f, 1.0f));
+        upAxis = new LineSegment(lengthAxis, upVector, center, glm::vec3(1.0f, 0.0f, 0.0f), "up");
+        rightAxis = new LineSegment(lengthAxis, rightVector, center, glm::vec3(0.0f, 1.0f, 0.0f), "right");
+        frontAxis = new LineSegment(lengthAxis, 
+        glm::cross(upVector, rightVector), center, glm::vec3(0.0f, 0.0f, 1.0f), "back");
+        
+        upAxis->setShader(lineShader);
+        frontAxis->setShader(lineShader);
+        rightAxis->setShader(lineShader);
+
+        children.push_back(upAxis);
+        children.push_back(rightAxis);
+        children.push_back(frontAxis);
+
+        // print the cuboid is created
+        std::cout << "Cuboid created" << std::endl;
     }
 
     ~Cuboid() {
-        glDeleteVertexArrays(1, &VAO);
         glDeleteBuffers(1, &VBO);
     }
 
-    void render(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix) {
+    void nextFrame() {
 
-        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        // glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
         // Bind VAO and draw
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
         glBindVertexArray(0);
 
-        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        for(GraphicalObject* child : children) {
+            child->setProjMat(projMat);
+            child->setViewMat(viewMat);
+            child->render();
+        }
 
-        lineShader->use();
-
-        // Set projection and view matrices
-        lineShader->setMat4("projection", projectionMatrix);
-        lineShader->setMat4("view", viewMatrix);
-
-        // Render upAxis, rightAxis, and frontAxis
-        upAxis->render();
-        rightAxis->render();
-        frontAxis->render();
+        // glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     }
 
     // Method to calculate vertices based on center, length, breadth, and height
@@ -143,5 +149,8 @@ public:
             backBottomRight.x, backBottomRight.y, backBottomRight.z,
             frontBottomRight.x, frontBottomRight.y, frontBottomRight.z
         };
+
+        // print vertices computed
+        std::cout << "Vertices computed" << std::endl;
     }
 };

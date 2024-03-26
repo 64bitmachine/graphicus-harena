@@ -3,18 +3,22 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <iostream>
+#include <string>
 
-class LineSegment {
+#include "graphicalobject.h"
+
+class LineSegment : public GraphicalObject {
 private:
     float length;
     glm::vec3 direction;
     glm::vec3 startPoint;
     // color vec
     glm::vec3 color;
-    GLuint VAO, VBO;
+    GLuint VBO;
 public:
-    LineSegment(float l, const glm::vec3& dir, const glm::vec3& start, const glm::vec3& col) : length(l), direction(glm::normalize(dir)), startPoint(start), color(col) {
-        
+    LineSegment(float l, const glm::vec3& dir, const glm::vec3& start, const glm::vec3& col, const std::string& goName) : 
+        length(l), direction(glm::normalize(dir)), startPoint(start), color(col) {
+        name = goName;
         // Initialize OpenGL buffers
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
@@ -40,11 +44,10 @@ public:
 
     ~LineSegment() {
         // Delete OpenGL buffers
-        glDeleteVertexArrays(1, &VAO);
         glDeleteBuffers(1, &VBO);
     }
 
-    void render() {
+    void nextFrame() {
         // Calculate endpoint
         glm::vec3 endPoint = startPoint + length * direction;
 
