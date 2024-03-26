@@ -93,7 +93,7 @@ glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int sc
     pr1 = pr1/pr1.w;
     // cout << glm::to_string(pr) << endl;
     // cout << glm::to_string(pr1) << endl;
-    pr = pr + glm::normalize(pr1-pr);
+    pr = pr + 10.5f * glm::normalize(pr1-pr);
     // glm::vec4 pos = inv_view*pr;
     
     return glm::vec3(pr.x, pr.y, pr.z);
@@ -300,9 +300,9 @@ int main(int argc, char** argv) {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        
+
         // projection and view matrix
-        projection = glm::perspective(glm::radians(g_camera->get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(g_camera->get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
         view = g_camera->get_view_matrix();
 
         // set projection and view matrix
