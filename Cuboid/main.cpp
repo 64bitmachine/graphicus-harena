@@ -49,6 +49,10 @@ ScaleDimension getScaleDimension(glm::vec3 mouseDragVec, glm::vec3 cuboidUpVec, 
     float projY = glm::dot(mouseDragVec, cuboidUpVec);
     float projZ = glm::dot(mouseDragVec, normal);
 
+    std::cout << "projX: " << projX << std::endl;
+    std::cout << "projY: " << projY << std::endl;
+    std::cout << "projZ: " << projZ << std::endl;
+
     // Take absolute values for projection components
     float absProjX = std::abs(projX);
     float absProjY = std::abs(projY);
@@ -198,6 +202,8 @@ void resizeCuboid(glm::vec3 relativeVec) {
             std::cout << "Invalid scaling" << std::endl;
             break;
     }
+
+    cuboid->rescale(relativeVec);
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -287,6 +293,7 @@ int main(int argc, char** argv) {
 
     // create program
     Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+    Shader* markerShader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
     cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(2.0f, 1.0f, 1.5f), 
     glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -343,11 +350,10 @@ int main(int argc, char** argv) {
 
         cuboid->setProjMat(&projection);
         cuboid->setViewMat(&view);
-
         cuboid->render();
 
         if (initialCuboid != nullptr) {
-            initialCuboid->setShader(shader);
+            initialCuboid->setShader(markerShader);
             initialCuboid->setProjMat(&projection);
             initialCuboid->setViewMat(&view);
             initialCuboid->render();

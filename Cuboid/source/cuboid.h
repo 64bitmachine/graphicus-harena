@@ -13,6 +13,7 @@ private:
     float length, breadth, height;
     glm::vec3 upVector;
     glm::vec3 rightVector;
+    glm::vec3 sizeLimits = glm::vec3(0.25f, 0.25f, 0.25f);
 
     GLuint VBO;
     std::vector<GLfloat> vertices;
@@ -143,5 +144,53 @@ public:
 
     glm::vec3 getCenter() {
         return center;
+    }
+
+    void rescale(glm::vec3 relativeVec) {
+        
+        if (relativeVec == glm::vec3(0.0f)) { return; }
+
+        float newLength, newBreadth, newHeight;
+        // update the relativeVec to remove invalid scaling
+        if (length + relativeVec.z < sizeLimits[0]) {
+            relativeVec.z = sizeLimits[0];
+            newLength = relativeVec.z;
+        } else {
+            newLength = length + relativeVec.z;
+        }
+        
+        if (breadth + relativeVec.x < sizeLimits[1]) {
+            relativeVec.x = sizeLimits[1];
+            newBreadth = relativeVec.x;
+        } else {
+            newBreadth = breadth + relativeVec.x;
+        }
+
+        if (height + relativeVec.y < sizeLimits[2]) {
+            relativeVec.y = sizeLimits[2];
+            newHeight = relativeVec.y;
+        } else {
+            newHeight = height + relativeVec.y;
+        }
+
+        center += relativeVec / 2.0f;
+
+        // rescaling matrix
+        glm::mat4 rescaleMat = glm::mat4(1.0f);
+        rescaleMat = glm::scale(rescaleMat, glm::vec3(newBreadth / breadth, newHeight / height, newLength / length));
+
+        length = newLength;
+        breadth = newBreadth;
+        height = newHeight;
+
+        *modelMat = rescaleMat * (*modelMat);
+
+        // // print rescaling matrix
+        // for(int i = 0; i < 4; i++) {
+        //     for(int j = 0; j < 4; j++) {
+        //         std::cout << (*modelMat)[i][j] << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
     }
 };

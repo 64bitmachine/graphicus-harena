@@ -13,9 +13,11 @@ class GraphicalObject {
         GLuint VAO = 0;
         Shader* shader;
         std::vector<GraphicalObject*> children;
-        glm::mat4 *projMat, *viewMat;
+        glm::mat4 *projMat, *viewMat, *modelMat;
 
-        GraphicalObject() {}
+        GraphicalObject() {
+            modelMat = new glm::mat4(1.0f);
+        }
 
         void addChild(GraphicalObject* child) {
             children.push_back(child);
@@ -26,6 +28,7 @@ class GraphicalObject {
         }
         void render() {
             shader->use();
+            shader->setMat4("model", *modelMat);
             nextFrame();
 
             for(GraphicalObject* child : children) {
