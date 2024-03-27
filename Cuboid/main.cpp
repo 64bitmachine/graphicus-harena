@@ -19,6 +19,10 @@ bool  firstMouse = true;
 bool isMouseCameraActive = false;
 Camera* g_camera;
 
+// initialMouse click marker
+Cuboid* initialCuboid = nullptr;
+glm::vec3 initialCuboidDim = glm::vec3(0.12f, 0.12f, 0.12f);
+
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
@@ -47,36 +51,6 @@ ScaleDimension getScaleDimension(glm::vec2 mouseDragVec, glm::vec3 cuboidUpVec, 
 }
 
 glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
-    // // Invert mouseY to match OpenGL coordinate system
-    // mouseY = screenHeight - mouseY;
-
-    // // Convert mouse position to normalized device coordinates (NDC)
-    // float x = (2.0f * mouseX) / screenWidth - 1.0f;
-    // float y = (2.0f * mouseY) / screenHeight - 1.0f;
-
-    // // Construct clip space coordinates
-    // glm::vec4 clipSpacePos(x, y, -1.0f, 1.0f);
-
-    // // Invert projection matrix
-    // glm::mat4 invertedProjectionMatrix = glm::inverse(projectionMatrix);
-
-    // // Obtain eye space coordinates
-    // glm::vec4 eyeSpacePos = invertedProjectionMatrix * clipSpacePos;
-    // eyeSpacePos.z = -1.0f;
-    // eyeSpacePos.w = 0.0f;
-
-    // // Invert view matrix
-    // glm::mat4 invertedViewMatrix = glm::inverse(viewMatrix);
-
-    // // Obtain world space coordinates
-    // glm::vec4 worldSpacePos = invertedViewMatrix * eyeSpacePos;
-    // worldSpacePos /= worldSpacePos.w;
-
-    // return glm::vec3(worldSpacePos);
-
-
-    // ================
-
     float x,y,z;
     x = float((mouseX / SCR_WIDTH) * 2 - 1);
     y = float(1 - (mouseY / SCR_HEIGHT) * 2);
@@ -93,31 +67,12 @@ glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int sc
     pr1 = pr1/pr1.w;
     // cout << glm::to_string(pr) << endl;
     // cout << glm::to_string(pr1) << endl;
-    pr = pr + 10.5f * glm::normalize(pr1-pr);
+    pr = pr + 11.2f * glm::normalize(pr1-pr);
     // glm::vec4 pos = inv_view*pr;
     
-    return glm::vec3(pr.x, pr.y, pr.z);
+    return glm::vec3(pr.x, pr.y, pr.z - 4.25);
 }
 
-void initialiseBuffer(GLuint* vbo, GLuint* vao) {
-    GLfloat vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f
-    };
-
-    glGenBuffers(1, vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glGenVertexArrays(1, vao);
-    glBindVertexArray(*vao);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    glBindVertexArray(0);
-}
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -199,12 +154,15 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
         // Example view and projection matrices (you need to replace these with your actual matrices)
         glm::mat4 viewMatrix = g_camera->get_view_matrix();
-        glm::mat4 projectionMatrix = glm::perspective(glm::radians(g_camera->get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projectionMatrix = glm::perspective(glm::radians(g_camera->get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
 
         glm::vec3 worldPos = screenToWorld(window, mouseX, mouseY, screenWidth, screenHeight, viewMatrix, projectionMatrix);
 
         // Output the corresponding 3D position in the scene
         printf("World Position: (%f, %f, %f)\n", worldPos.x, worldPos.y, worldPos.z);
+
+        initialCuboid = new Cuboid(worldPos, initialCuboidDim, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
     } if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
         isMouseClicked = false;
         
@@ -216,6 +174,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         glm::vec2 relativeVec = getRelVec(clickReleaseX, clickReleaseY, clickX, clickY, SCR_WIDTH, SCR_HEIGHT);
 
         std::cout << "Relative vector: " << relativeVec.x << ", " << relativeVec.y << std::endl;
+
+        // delete cuboid
+        delete initialCuboid;
+        initialCuboid = nullptr;
     }
 }
 
@@ -256,8 +218,6 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-
 	// setup opengl options
 	glEnable(GL_DEPTH_TEST);
     // glEnable(GL_CULL_FACE);
@@ -275,7 +235,7 @@ int main(int argc, char** argv) {
     // initialiseBuffer(&vbo, &vao);
 
     // create cuboid
-    Cuboid* cuboid = new Cuboid(glm::vec3(0.0f), 2.0f, 1.0f, 1.5f, 
+    Cuboid* cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(2.0f, 1.0f, 1.5f), 
     glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     // camera
@@ -288,6 +248,25 @@ int main(int argc, char** argv) {
     float currentFrame;
 
     cuboid->setShader(shader);
+
+    int lengthAxis = 4;
+
+    Shader *lineShader = new Shader("shaders/line.vs", "shaders/line.fs");
+    LineSegment *upAxis, *rightAxis, *frontAxis;
+
+    // Initialize upAxis, rightAxis, and frontAxis
+    upAxis = new LineSegment(lengthAxis, cuboid->getUpVector(), cuboid->getCenter(), glm::vec3(1.0f, 0.0f, 0.0f), "up");
+    rightAxis = new LineSegment(lengthAxis, cuboid->getRightVector(), cuboid->getCenter(), glm::vec3(0.0f, 1.0f, 0.0f), "right");
+    frontAxis = new LineSegment(lengthAxis, 
+    glm::cross(cuboid->getUpVector(), cuboid->getRightVector()), cuboid->getCenter(), glm::vec3(0.0f, 0.0f, 1.0f), "back");
+    
+    upAxis->setShader(lineShader);
+    frontAxis->setShader(lineShader);
+    rightAxis->setShader(lineShader);
+
+    cuboid->children.push_back(upAxis);
+    cuboid->children.push_back(rightAxis);
+    cuboid->children.push_back(frontAxis);
 
     do {
 
@@ -313,6 +292,13 @@ int main(int argc, char** argv) {
         cuboid->setViewMat(&view);
 
         cuboid->render();
+
+        if (initialCuboid != nullptr) {
+            initialCuboid->setShader(shader);
+            initialCuboid->setProjMat(&projection);
+            initialCuboid->setViewMat(&view);
+            initialCuboid->render();
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

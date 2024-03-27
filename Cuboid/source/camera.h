@@ -59,6 +59,8 @@ public:
 
     float get_zoom() const;
 
+    glm::vec3 get_position() const;
+
 };
 
 #endif // __CAMERA_H__

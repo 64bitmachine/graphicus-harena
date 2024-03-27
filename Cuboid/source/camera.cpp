@@ -88,3 +88,5 @@ void Camera::process_mouse_scroll(float y_offset) {
 }
 
 float Camera::get_zoom() const { return m_zoom; }
+
+glm::vec3 Camera::get_position() const { return m_position; }

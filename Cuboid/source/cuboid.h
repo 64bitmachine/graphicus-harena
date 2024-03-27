@@ -18,8 +18,8 @@ private:
     std::vector<GLfloat> vertices;
 
 public:
-    Cuboid(glm::vec3 center, float length, float breadth, float height, glm::vec3 upVector, glm::vec3 rightVector) :
-        center(center), length(length), breadth(breadth), height(height), upVector(upVector), rightVector(rightVector) {
+    Cuboid(glm::vec3 center, glm::vec3 dims, glm::vec3 upVector, glm::vec3 rightVector) :
+        center(center), length(dims.x), breadth(dims.y), height(dims.z), upVector(upVector), rightVector(rightVector) {
         
         name = "cuboid";
         
@@ -41,25 +41,6 @@ public:
 
         // Unbind VAO
         glBindVertexArray(0);
-
-        int lengthAxis = 4;
-
-        Shader *lineShader = new Shader("shaders/line.vs", "shaders/line.fs");
-        LineSegment *upAxis, *rightAxis, *frontAxis;
-
-        // Initialize upAxis, rightAxis, and frontAxis
-        upAxis = new LineSegment(lengthAxis, upVector, center, glm::vec3(1.0f, 0.0f, 0.0f), "up");
-        rightAxis = new LineSegment(lengthAxis, rightVector, center, glm::vec3(0.0f, 1.0f, 0.0f), "right");
-        frontAxis = new LineSegment(lengthAxis, 
-        glm::cross(upVector, rightVector), center, glm::vec3(0.0f, 0.0f, 1.0f), "back");
-        
-        upAxis->setShader(lineShader);
-        frontAxis->setShader(lineShader);
-        rightAxis->setShader(lineShader);
-
-        children.push_back(upAxis);
-        children.push_back(rightAxis);
-        children.push_back(frontAxis);
 
         // print the cuboid is created
         std::cout << "Cuboid created" << std::endl;
@@ -146,5 +127,21 @@ public:
 
         // print vertices computed
         std::cout << "Vertices computed" << std::endl;
+    }
+
+    void moveTo(glm::vec3 p) {
+        center = p;
+    }
+
+    glm::vec3 getUpVector() {
+        return upVector;
+    }
+
+    glm::vec3 getRightVector() {
+        return rightVector;
+    }
+
+    glm::vec3 getCenter() {
+        return center;
     }
 };
