@@ -12,6 +12,8 @@
 #include "source/shader.h"
 #include "source/cuboid.h"
 
+Cuboid* cuboid = nullptr;
+
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
@@ -29,32 +31,57 @@ const unsigned int SCR_HEIGHT = 600;
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 
-enum ScaleDimension { LENGTH_BREADTH = 0, LENGTH_HEIGHT = 1, BREADTH_HEIGHT = 2 };
+enum ScaleDimension { 
+    LENGTH_BREADTH = 0,
+    LENGTH_HEIGHT = 1, 
+    BREADTH_HEIGHT = 2,
+    LENGTH = 3,
+    BREADTH = 4,
+    HEIGHT = 5,
+    INVALID = 6 };
 
-ScaleDimension getScaleDimension(glm::vec2 mouseDragVec, glm::vec3 cuboidUpVec, glm::vec3 cuboidRightVec) {
-    // Project the mouse drag vector onto the plane defined by the cuboid's up and right vectors
-    glm::vec2 projVec;
-    projVec.x = glm::dot(mouseDragVec, glm::vec2(cuboidRightVec.x, cuboidRightVec.y));
-    projVec.y = glm::dot(mouseDragVec, glm::vec2(cuboidUpVec.x, cuboidUpVec.y));
+ScaleDimension getScaleDimension(glm::vec3 mouseDragVec, glm::vec3 cuboidUpVec, glm::vec3 cuboidRightVec) {
+    // Calculate normal vector to the plane defined by cuboidUpVec and cuboidRightVec
+    glm::vec3 normal = glm::cross(cuboidUpVec, cuboidRightVec);
 
-    // Calculate the magnitudes of the projected vectors
-    float projXMag = glm::length(projVec.x);
-    float projYMag = glm::length(projVec.y);
+    // Project mouseDragVec onto the planes defined by cuboidUpVec, cuboidRightVec, and normal
+    float projX = glm::dot(mouseDragVec, cuboidRightVec);
+    float projY = glm::dot(mouseDragVec, cuboidUpVec);
+    float projZ = glm::dot(mouseDragVec, normal);
 
-    // Determine which dimensions to scale based on the magnitudes of the projected vectors
-    if (projXMag > projYMag) {
+    // Take absolute values for projection components
+    float absProjX = std::abs(projX);
+    float absProjY = std::abs(projY);
+    float absProjZ = std::abs(projZ);
+
+    std::cout << "absProjX: " << absProjX << std::endl;
+    std::cout << "absProjY: " << absProjY << std::endl;
+    std::cout << "absProjZ: " << absProjZ << std::endl;
+
+    // Determine which dimension has the greatest projection magnitude
+    if (absProjX > absProjZ && absProjY > absProjZ && absProjX && absProjY) {
+        // If projection along X axis is greatest, scale along length and breadth
+        return BREADTH_HEIGHT;
+    } else if (absProjX > absProjY && absProjZ > absProjY && absProjX && absProjZ) {
+        // If projection along Y axis is greatest, scale along length and height
         return LENGTH_BREADTH;
-    } else {
+    } else if (absProjY > absProjX && absProjZ > absProjX && absProjY && absProjZ) {
+        // If projection along Z axis is greatest, scale along breadth and height
         return LENGTH_HEIGHT;
+    } if (absProjX > 0) {
+        return BREADTH;
+    } if (absProjY > 0) {
+        return HEIGHT;
+    } if (absProjZ > 0) {
+        return LENGTH;
     }
-    // If you want to consider BREADTH_HEIGHT as well, you can compare the magnitudes of the other two projected vectors.
+    return INVALID;
 }
 
 glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
     float x,y,z;
     x = float((mouseX / SCR_WIDTH) * 2 - 1);
     y = float(1 - (mouseY / SCR_HEIGHT) * 2);
-    printf("mouse click pos: %f, %f\n", x, y);
     glReadPixels(mouseX, mouseY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
 
     printf("z value: %f\n", z);
@@ -99,7 +126,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-glm::vec2 getRelVec(int mouseX, int mouseY, int initialClickX, int initialClickY, int width, int height) {
+glm::vec3 getRelVec(int mouseX, int mouseY, int initialClickX, int initialClickY, int width, int height) {
     // Convert coordinates to NDC (-1 to 1)
     float mouseX_NDC = (2.0f * mouseX) / width - 1.0f;
     float mouseY_NDC = 1.0f - (2.0f * mouseY) / height;
@@ -110,7 +137,7 @@ glm::vec2 getRelVec(int mouseX, int mouseY, int initialClickX, int initialClickY
     // Calculate relative vector
     glm::vec2 relativeVector = glm::vec2(mouseX_NDC - initialClickX_NDC, mouseY_NDC - initialClickY_NDC);
 
-    return relativeVector;
+    return glm::vec3(relativeVector, 0.0f);
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -135,19 +162,49 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     g_camera->process_mouse_scroll(yoffset);
 }
 
-double clickX = 0.0, clickReleaseX = 0.0;
-double clickY = 0.0, clickReleaseY = 0.0;
+double mouseX = 0.0, clickReleaseX = 0.0;
+double mouseY = 0.0, clickReleaseY = 0.0;
 bool isMouseClicked = false;
+
+void resizeCuboid(glm::vec3 relativeVec) {
+    switch (getScaleDimension(relativeVec, cuboid->getUpVector(), cuboid->getRightVector()))
+    {
+        case ScaleDimension::LENGTH_BREADTH:
+            std::cout << "Length and breadth" << std::endl;
+            break;
+        
+        case ScaleDimension::LENGTH_HEIGHT:
+            std::cout << "Length and height" << std::endl;
+            break;
+
+        case ScaleDimension::BREADTH_HEIGHT:
+            std::cout << "Breadth and height" << std::endl;
+            break;
+
+        case ScaleDimension::LENGTH:
+            std::cout << "Length" << std::endl;
+            break;
+        
+        case ScaleDimension::HEIGHT:
+            std::cout << "Height" << std::endl;
+            break;
+
+        case ScaleDimension::BREADTH:
+            std::cout << "Breadth" << std::endl;
+            break;
+
+        default:
+            // print invalid scaling
+            std::cout << "Invalid scaling" << std::endl;
+            break;
+    }
+}
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         isMouseClicked = true;
 
-        double mouseX, mouseY;
         glfwGetCursorPos(window, &mouseX, &mouseY);
-
-        // print cursor position
-        std::cout << "Cursor position: " << mouseX << ", " << mouseY << std::endl;
 
         int screenWidth, screenHeight;
         glfwGetWindowSize(window, &screenWidth, &screenHeight);
@@ -167,19 +224,20 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         isMouseClicked = false;
         
         glfwGetCursorPos(window, &clickReleaseX, &clickReleaseY);
-        // print cursor position
-        std::cout << "Cursor position: " << clickReleaseX << ", " << clickReleaseY << std::endl;
 
         // Calculate relative vector
-        glm::vec2 relativeVec = getRelVec(clickReleaseX, clickReleaseY, clickX, clickY, SCR_WIDTH, SCR_HEIGHT);
+        glm::vec3 relativeVec = getRelVec(clickReleaseX, clickReleaseY, mouseX, mouseY, SCR_WIDTH, SCR_HEIGHT);
+        std::cout << "Relative vector: " << relativeVec.x << ", " << relativeVec.y << ", " << relativeVec.z << std::endl;
 
-        std::cout << "Relative vector: " << relativeVec.x << ", " << relativeVec.y << std::endl;
+        // resizeCuboid
+        resizeCuboid(relativeVec);
 
         // delete cuboid
         delete initialCuboid;
         initialCuboid = nullptr;
     }
 }
+
 
 int main(int argc, char** argv) {
 
@@ -230,12 +288,7 @@ int main(int argc, char** argv) {
     // create program
     Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
-    // initialise buffer
-    // GLuint vbo, vao;
-    // initialiseBuffer(&vbo, &vao);
-
-    // create cuboid
-    Cuboid* cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(2.0f, 1.0f, 1.5f), 
+    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(2.0f, 1.0f, 1.5f), 
     glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     // camera
