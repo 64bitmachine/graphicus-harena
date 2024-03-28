@@ -20,7 +20,13 @@ include_directories(${OPENGL_INCLUDE_DIRS})
 
 # glew
 find_package(GLEW REQUIRED)
-include_directories(${GLEW_INCLUDE_DIRS})
+if(WIN32)
+    # If the operating system is Windows, manually set the include directory to the GLEW folder
+    set(GLEW_INCLUDE_DIRS "C:/OpenGL/glew-2.1.0/include")
+else()
+    # Otherwise, use the include directories provided by the GLEW package
+    include_directories(${GLEW_INCLUDE_DIRS})
+endif()
 
 # glfw
 find_package(glfw3 3.3 REQUIRED)
