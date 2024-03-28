@@ -23,6 +23,7 @@ float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 bool  firstMouse = true;
 bool isMouseCameraActive = false;
+bool rescaleCuboidUsingCornerPoint = false;
 Camera* g_camera;
 
 // initialMouse click marker
@@ -143,7 +144,8 @@ void resizeCuboid(glm::vec3 relativeVec, bool override) {
             break;
     }
 
-    cuboid->rescale(relativeVec, override);
+    if (!rescaleCuboidUsingCornerPoint) cuboid->rescale(relativeVec, override);
+    else cuboid->rescaleUsingCorner(relativeVec, override);
 }
 
 
@@ -170,6 +172,10 @@ void processInput(GLFWwindow* window) {
     // 1 to rotate along cuboid upVec
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
         cuboid->rotateAboutUpVec();
+    }
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+        rescaleCuboidUsingCornerPoint = !rescaleCuboidUsingCornerPoint;
+        printf("Rescale cuboid using corner point: %s\n", rescaleCuboidUsingCornerPoint ? "Active" : "Inactive");
     }
 }
 

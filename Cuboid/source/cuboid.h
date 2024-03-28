@@ -325,4 +325,51 @@ public:
             *child->modelMat = translateBack * rotationMatrix * translateToCenter * (*child->modelMat);
         }
     }
+
+    glm::vec3 getCorner(int index) {
+        switch (index) {
+            case 0:
+                return FRONT_BOTTOM_LEFT;
+            case 1:
+                return FRONT_BOTTOM_RIGHT;
+            case 2:
+                return FRONT_TOP_LEFT;
+            case 3:
+                return FRONT_TOP_RIGHT;
+            case 4:
+                return BACK_BOTTOM_LEFT;
+            case 5:
+                return BACK_BOTTOM_RIGHT;
+            case 6:
+                return BACK_TOP_LEFT;
+            case 7:
+                return BACK_TOP_RIGHT;
+            default:
+                return glm::vec3(0.0f, 0.0f, 0.0f);
+        }
+    }
+
+    void rescaleUsingCorner(glm::vec3 drag, bool override) {
+        int activeCorner = 3;
+
+        // adjCorner using xor 1, 2, 4
+        int cornerB = activeCorner ^ 1;
+        int cornerH = activeCorner ^ 2;
+        int cornerL = activeCorner ^ 4;
+
+        std::cout << "Active Corner: " << activeCorner << std::endl;
+        std::cout << "Corner B: " << cornerB << std::endl;
+        std::cout << "Corner H: " << cornerH << std::endl;
+        std::cout << "Corner L: " << cornerL << std::endl;
+
+        glm::vec3 cornerBVec = glm::normalize(getCorner(activeCorner) - getCorner(cornerB));
+        glm::vec3 cornerHVec = glm::normalize(getCorner(activeCorner) - getCorner(cornerH));
+        glm::vec3 cornerLVec = glm::normalize(getCorner(activeCorner) - getCorner(cornerL));
+
+        float deltaB = glm::dot(cornerBVec, drag);
+        float deltaH = glm::dot(cornerHVec, drag);
+        float deltaL = glm::dot(cornerLVec, drag);
+
+        rescale(glm::vec3(deltaB, deltaH, deltaL), override);
+    }
 };
