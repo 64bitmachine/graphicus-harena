@@ -6,6 +6,9 @@ VERSION 0.1.0
 DESCRIPTION "Hello World"
 LANGUAGES CXX)
 
+# cmake type 
+set(CMAKE_BUILD_TYPE Debug)
+
 set (CMAKE_CXX_STANDARD 11)
 
 include(CTest)

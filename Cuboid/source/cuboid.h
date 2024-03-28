@@ -71,14 +71,14 @@ public:
         float halfHeight = height / 2.0f;
 
         // Calculate vertices
-        glm::vec3 frontBottomLeft = center - upVector * halfHeight - rightVector * halfLength - glm::cross(upVector, rightVector) * halfBreadth;
-        glm::vec3 frontBottomRight = center - upVector * halfHeight + rightVector * halfLength - glm::cross(upVector, rightVector) * halfBreadth;
-        glm::vec3 frontTopRight = center + upVector * halfHeight + rightVector * halfLength - glm::cross(upVector, rightVector) * halfBreadth;
-        glm::vec3 frontTopLeft = center + upVector * halfHeight - rightVector * halfLength - glm::cross(upVector, rightVector) * halfBreadth;
-        glm::vec3 backBottomLeft = center - upVector * halfHeight - rightVector * halfLength + glm::cross(upVector, rightVector) * halfBreadth;
-        glm::vec3 backBottomRight = center - upVector * halfHeight + rightVector * halfLength + glm::cross(upVector, rightVector) * halfBreadth;
-        glm::vec3 backTopRight = center + upVector * halfHeight + rightVector * halfLength + glm::cross(upVector, rightVector) * halfBreadth;
-        glm::vec3 backTopLeft = center + upVector * halfHeight - rightVector * halfLength + glm::cross(upVector, rightVector) * halfBreadth;
+        glm::vec3 frontBottomLeft = center - upVector * halfHeight - rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 frontBottomRight = center - upVector * halfHeight + rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 frontTopRight = center + upVector * halfHeight + rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 frontTopLeft = center + upVector * halfHeight - rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 backBottomLeft = center - upVector * halfHeight - rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 backBottomRight = center - upVector * halfHeight + rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 backTopRight = center + upVector * halfHeight + rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 backTopLeft = center + upVector * halfHeight - rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
 
         // Push vertices into vector
         vertices = {
@@ -173,24 +173,66 @@ public:
             newHeight = height + relativeVec.y;
         }
 
-        center += relativeVec / 2.0f;
+        // translation matrix
+        glm::mat4 translateToCenter = glm::translate(glm::mat4(1.0f), -center);
+
+        float scaleX = newBreadth / breadth;
+        float scaleY = newHeight / height;
+        float scaleZ = newLength / length;
+
+        std::cout << "Scale X: " << scaleX << std::endl;
+        std::cout << "Scale Y: " << scaleY << std::endl;
+        std::cout << "Scale Z: " << scaleZ << std::endl;
 
         // rescaling matrix
-        glm::mat4 rescaleMat = glm::mat4(1.0f);
-        rescaleMat = glm::scale(rescaleMat, glm::vec3(newBreadth / breadth, newHeight / height, newLength / length));
+        glm::mat4 rescaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleX, scaleY, scaleZ));
+
+
+        center += (relativeVec / 2.0f);
+
+        // move back to original position
+        glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), center);
 
         length = newLength;
         breadth = newBreadth;
         height = newHeight;
 
-        *modelMat = rescaleMat * (*modelMat);
+        *modelMat = translateBack * rescaleMat * translateToCenter * (*modelMat);
 
-        // // print rescaling matrix
-        // for(int i = 0; i < 4; i++) {
-        //     for(int j = 0; j < 4; j++) {
-        //         std::cout << (*modelMat)[i][j] << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
+        printLeftFaceVertices();
+
+        // print rescaling matrix
+        for(int i = 0; i < 4; i++) {
+            for(int j = 0; j < 4; j++) {
+                std::cout << (*modelMat)[i][j] << " ";
+            }
+            std::cout << std::endl;
+        }
+
+        glm::vec3 leftBottomFront = center - (breadth * rightVector + height * upVector + length * glm::cross(rightVector, upVector))/2.0f;
+        glm::vec4 newVec = (*modelMat) * glm::vec4(leftBottomFront, 1.0f);
+        std::cout << "New Left Bottom Front: " << newVec.x << ", " << newVec.y << ", " << newVec.z << std::endl;
     }
+
+    void printLeftFaceVertices() {
+        std::cout << "Left Face Vertices" << std::endl;
+
+        // Calculate half lengths
+        float halfLength = length / 2.0f;
+        float halfBreadth = breadth / 2.0f;
+        float halfHeight = height / 2.0f;
+
+        // Calculate left face vertices
+        glm::vec3 leftBottomFront = center - halfBreadth * rightVector - halfHeight * upVector - halfLength * glm::cross(rightVector, upVector);
+        glm::vec3 leftTopFront = center - halfBreadth * rightVector + halfHeight * upVector - halfLength * glm::cross(rightVector, upVector);
+        glm::vec3 leftBottomBack = center - halfBreadth * rightVector - halfHeight * upVector + halfLength * glm::cross(rightVector, upVector);
+        glm::vec3 leftTopBack = center - halfBreadth * rightVector + halfHeight * upVector + halfLength * glm::cross(rightVector, upVector);
+
+        // Output left face vertices
+        std::cout << "Left Bottom Front: (" << leftBottomFront.x << ", " << leftBottomFront.y << ", " << leftBottomFront.z << ")" << std::endl;
+        std::cout << "Left Top Front: (" << leftTopFront.x << ", " << leftTopFront.y << ", " << leftTopFront.z << ")" << std::endl;
+        std::cout << "Left Bottom Back: (" << leftBottomBack.x << ", " << leftBottomBack.y << ", " << leftBottomBack.z << ")" << std::endl;
+        std::cout << "Left Top Back: (" << leftTopBack.x << ", " << leftTopBack.y << ", " << leftTopBack.z << ")" << std::endl;
+    }
+
 };

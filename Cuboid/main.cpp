@@ -23,7 +23,9 @@ Camera* g_camera;
 
 // initialMouse click marker
 Cuboid* initialCuboid = nullptr;
-glm::vec3 initialCuboidDim = glm::vec3(0.12f, 0.12f, 0.12f);
+glm::vec3 initialCuboidDim = glm::vec3(0.01f, 0.01f, 0.01f);
+
+Cuboid* cornerPoint = nullptr;
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -98,10 +100,10 @@ glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int sc
     pr1 = pr1/pr1.w;
     // cout << glm::to_string(pr) << endl;
     // cout << glm::to_string(pr1) << endl;
-    pr = pr + 11.2f * glm::normalize(pr1-pr);
+    pr = pr + glm::normalize(pr1-pr);
     // glm::vec4 pos = inv_view*pr;
     
-    return glm::vec3(pr.x, pr.y, pr.z - 4.25);
+    return glm::vec3(pr.x, pr.y, pr.z);
 }
 
 
@@ -297,6 +299,10 @@ int main(int argc, char** argv) {
 
     cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(2.0f, 1.0f, 1.5f), 
     glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    cuboid->printLeftFaceVertices();
+
+    // create marker
+    cornerPoint = new Cuboid(glm::vec3(-0.5, -0.75, 1), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     // camera
     g_camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
@@ -308,6 +314,7 @@ int main(int argc, char** argv) {
     float currentFrame;
 
     cuboid->setShader(shader);
+    cornerPoint->setShader(shader);
 
     int lengthAxis = 4;
 
@@ -351,6 +358,10 @@ int main(int argc, char** argv) {
         cuboid->setProjMat(&projection);
         cuboid->setViewMat(&view);
         cuboid->render();
+
+        cornerPoint->setProjMat(&projection);
+        cornerPoint->setViewMat(&view);
+        cornerPoint->render();
 
         if (initialCuboid != nullptr) {
             initialCuboid->setShader(markerShader);
