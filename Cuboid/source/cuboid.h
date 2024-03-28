@@ -14,6 +14,7 @@ private:
     glm::vec3 upVector;
     glm::vec3 rightVector;
     glm::vec3 sizeLimits = glm::vec3(0.25f, 0.25f, 0.25f);
+    glm::mat4* originalModelMat = new glm::mat4(1.0f);
 
     GLuint VBO;
     std::vector<GLfloat> vertices;
@@ -53,14 +54,14 @@ public:
 
     void nextFrame() {
 
-        // glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
         // Bind VAO and draw
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
         glBindVertexArray(0);
 
-        // glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     }
 
     // Method to calculate vertices based on center, length, breadth, and height
@@ -146,7 +147,7 @@ public:
         return center;
     }
 
-    void rescale(glm::vec3 relativeVec) {
+    void rescale(glm::vec3 relativeVec, bool override) {
         
         if (relativeVec == glm::vec3(0.0f)) { return; }
 
@@ -180,24 +181,36 @@ public:
         float scaleY = newHeight / height;
         float scaleZ = newLength / length;
 
-        std::cout << "Scale X: " << scaleX << std::endl;
-        std::cout << "Scale Y: " << scaleY << std::endl;
-        std::cout << "Scale Z: " << scaleZ << std::endl;
+        // std::cout << "Scale X: " << scaleX << std::endl;
+        // std::cout << "Scale Y: " << scaleY << std::endl;
+        // std::cout << "Scale Z: " << scaleZ << std::endl;
 
         // rescaling matrix
         glm::mat4 rescaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleX, scaleY, scaleZ));
 
 
-        center += (relativeVec / 2.0f);
+        if (override) {
+            center += (relativeVec / 2.0f);
+            length = newLength;
+            breadth = newBreadth;
+            height = newHeight;
+        }
+        glm::vec3 tempCenter = center + (relativeVec / 2.0f);
 
         // move back to original position
-        glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), center);
+        glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), tempCenter);
 
-        length = newLength;
-        breadth = newBreadth;
-        height = newHeight;
+        if (override) {
+            *originalModelMat = translateBack * rescaleMat * translateToCenter * (*modelMat);
+            *modelMat = *originalModelMat;
+        }
+        else
+            *modelMat = translateBack * rescaleMat * translateToCenter * (*originalModelMat);
 
-        *modelMat = translateBack * rescaleMat * translateToCenter * (*modelMat);
+        if (override)
+            for (GraphicalObject* child : children) {
+                *child->modelMat = translateBack * translateToCenter * (*child->modelMat);
+            }
 
         // printLeftFaceVertices();
 
@@ -235,4 +248,27 @@ public:
         std::cout << "Left Top Back: (" << leftTopBack.x << ", " << leftTopBack.y << ", " << leftTopBack.z << ")" << std::endl;
     }
 
+    void rotateAboutUpVec() {
+        // std::cout << "Rotate Up" << std::endl;
+
+        glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(0.5f), upVector);
+
+        // Rotate right vector and forward vector using rotation matrix
+        rightVector = glm::normalize(glm::vec3(rotationMatrix * glm::vec4(rightVector, 0.0f)));
+
+        // update model matrix
+
+        // translate to center
+        glm::mat4 translateToCenter = glm::translate(glm::mat4(1.0f), -center);
+
+        // translate back to original position
+        glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), center);
+
+        *modelMat = translateBack * rotationMatrix * translateToCenter * (*modelMat);
+        *originalModelMat = *modelMat;
+
+        for (GraphicalObject* child : children) {
+            *child->modelMat = translateBack * rotationMatrix * translateToCenter * (*child->modelMat);
+        }
+    }
 };

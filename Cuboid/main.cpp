@@ -14,6 +14,10 @@
 
 Cuboid* cuboid = nullptr;
 
+double mouseX = 0.0, clickReleaseX = 0.0;
+double mouseY = 0.0, clickReleaseY = 0.0;
+bool isMouseClicked = false;
+
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
@@ -51,18 +55,18 @@ ScaleDimension getScaleDimension(glm::vec3 mouseDragVec, glm::vec3 cuboidUpVec, 
     float projY = glm::dot(mouseDragVec, cuboidUpVec);
     float projZ = glm::dot(mouseDragVec, normal);
 
-    std::cout << "projX: " << projX << std::endl;
-    std::cout << "projY: " << projY << std::endl;
-    std::cout << "projZ: " << projZ << std::endl;
+    // std::cout << "projX: " << projX << std::endl;
+    // std::cout << "projY: " << projY << std::endl;
+    // std::cout << "projZ: " << projZ << std::endl;
 
     // Take absolute values for projection components
     float absProjX = std::abs(projX);
     float absProjY = std::abs(projY);
     float absProjZ = std::abs(projZ);
 
-    std::cout << "absProjX: " << absProjX << std::endl;
-    std::cout << "absProjY: " << absProjY << std::endl;
-    std::cout << "absProjZ: " << absProjZ << std::endl;
+    // std::cout << "absProjX: " << absProjX << std::endl;
+    // std::cout << "absProjY: " << absProjY << std::endl;
+    // std::cout << "absProjZ: " << absProjZ << std::endl;
 
     // Determine which dimension has the greatest projection magnitude
     if (absProjX > absProjZ && absProjY > absProjZ && absProjX && absProjY) {
@@ -106,73 +110,7 @@ glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int sc
     return glm::vec3(pr.x, pr.y, pr.z);
 }
 
-
-void processInput(GLFWwindow* window) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        g_camera->process_keyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        g_camera->process_keyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        g_camera->process_keyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        g_camera->process_keyboard(RIGHT, deltaTime);
-
-    // Toggle mouse camera mode using C
-    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-        isMouseCameraActive = !isMouseCameraActive;
-
-        printf("Mouse camera mode: %s\n", isMouseCameraActive ? "Active" : "Inactive");
-    }
-}
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
-
-glm::vec3 getRelVec(int mouseX, int mouseY, int initialClickX, int initialClickY, int width, int height) {
-    // Convert coordinates to NDC (-1 to 1)
-    float mouseX_NDC = (2.0f * mouseX) / width - 1.0f;
-    float mouseY_NDC = 1.0f - (2.0f * mouseY) / height;
-
-    float initialClickX_NDC = (2.0f * initialClickX) / width - 1.0f;
-    float initialClickY_NDC = 1.0f - (2.0f * initialClickY) / height;
-
-    // Calculate relative vector
-    glm::vec2 relativeVector = glm::vec2(mouseX_NDC - initialClickX_NDC, mouseY_NDC - initialClickY_NDC);
-
-    return glm::vec3(relativeVector, 0.0f);
-}
-
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    if (firstMouse) {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-    lastX = xpos;
-    lastY = ypos;
-
-    if (isMouseCameraActive) {
-        g_camera->process_mouse_movement(xoffset, yoffset);
-    }
-}
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    g_camera->process_mouse_scroll(yoffset);
-}
-
-double mouseX = 0.0, clickReleaseX = 0.0;
-double mouseY = 0.0, clickReleaseY = 0.0;
-bool isMouseClicked = false;
-
-void resizeCuboid(glm::vec3 relativeVec) {
+void resizeCuboid(glm::vec3 relativeVec, bool override) {
     switch (getScaleDimension(relativeVec, cuboid->getUpVector(), cuboid->getRightVector()))
     {
         case ScaleDimension::LENGTH_BREADTH:
@@ -205,7 +143,88 @@ void resizeCuboid(glm::vec3 relativeVec) {
             break;
     }
 
-    cuboid->rescale(relativeVec);
+    cuboid->rescale(relativeVec, override);
+}
+
+
+void processInput(GLFWwindow* window) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        g_camera->process_keyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        g_camera->process_keyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        g_camera->process_keyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        g_camera->process_keyboard(RIGHT, deltaTime);
+
+    // Toggle mouse camera mode using C
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+        isMouseCameraActive = !isMouseCameraActive;
+
+        printf("Mouse camera mode: %s\n", isMouseCameraActive ? "Active" : "Inactive");
+    }
+
+    // 1 to rotate along cuboid upVec
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        cuboid->rotateAboutUpVec();
+    }
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+}
+
+glm::vec3 getRelVec(int mouseX, int mouseY, int initialClickX, int initialClickY, int width, int height) {
+    // Convert coordinates to NDC (-1 to 1)
+    float mouseX_NDC = (2.0f * mouseX) / width - 1.0f;
+    float mouseY_NDC = 1.0f - (2.0f * mouseY) / height;
+
+    float initialClickX_NDC = (2.0f * initialClickX) / width - 1.0f;
+    float initialClickY_NDC = 1.0f - (2.0f * initialClickY) / height;
+
+    // Calculate relative vector
+    glm::vec2 relativeVector = glm::vec2(mouseX_NDC - initialClickX_NDC, mouseY_NDC - initialClickY_NDC);
+
+    return glm::vec3(relativeVector, 0.0f);
+}
+
+void cuboidResizeCallback(GLFWwindow* window, bool override) {
+    glfwGetCursorPos(window, &clickReleaseX, &clickReleaseY);
+    // Calculate relative vector
+    glm::vec3 relativeVec = getRelVec(clickReleaseX, clickReleaseY, mouseX, mouseY, SCR_WIDTH, SCR_HEIGHT);
+    std::cout << "Relative vector: " << relativeVec.x << ", " << relativeVec.y << ", " << relativeVec.z << std::endl;
+
+    // resizeCuboid
+    resizeCuboid(relativeVec, override);
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (firstMouse) {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+    lastX = xpos;
+    lastY = ypos;
+
+    if (isMouseCameraActive) {
+        g_camera->process_mouse_movement(xoffset, yoffset);
+    }
+
+    if (isMouseClicked) {
+        cuboidResizeCallback(window, false);
+    }
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    g_camera->process_mouse_scroll(yoffset);
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -224,21 +243,14 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         glm::vec3 worldPos = screenToWorld(window, mouseX, mouseY, screenWidth, screenHeight, viewMatrix, projectionMatrix);
 
         // Output the corresponding 3D position in the scene
-        printf("World Position: (%f, %f, %f)\n", worldPos.x, worldPos.y, worldPos.z);
+        // printf("World Position: (%f, %f, %f)\n", worldPos.x, worldPos.y, worldPos.z);
 
         initialCuboid = new Cuboid(worldPos, initialCuboidDim, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     } if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
         isMouseClicked = false;
         
-        glfwGetCursorPos(window, &clickReleaseX, &clickReleaseY);
-
-        // Calculate relative vector
-        glm::vec3 relativeVec = getRelVec(clickReleaseX, clickReleaseY, mouseX, mouseY, SCR_WIDTH, SCR_HEIGHT);
-        std::cout << "Relative vector: " << relativeVec.x << ", " << relativeVec.y << ", " << relativeVec.z << std::endl;
-
-        // resizeCuboid
-        resizeCuboid(relativeVec);
+        cuboidResizeCallback(window, true);
 
         // delete cuboid
         delete initialCuboid;
@@ -299,7 +311,6 @@ int main(int argc, char** argv) {
 
     cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(2.0f, 1.0f, 1.5f), 
     glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    cuboid->printLeftFaceVertices();
 
     // create marker
     cornerPoint = new Cuboid(glm::vec3(-0.5, -0.75, 1), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
