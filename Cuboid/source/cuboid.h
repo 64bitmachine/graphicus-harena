@@ -153,22 +153,22 @@ public:
         float newLength, newBreadth, newHeight;
         // update the relativeVec to remove invalid scaling
         if (length + relativeVec.z < sizeLimits[0]) {
-            relativeVec.z = sizeLimits[0];
-            newLength = relativeVec.z;
+            newLength = sizeLimits[0];
+            relativeVec.z = newLength - length;
         } else {
             newLength = length + relativeVec.z;
         }
         
         if (breadth + relativeVec.x < sizeLimits[1]) {
-            relativeVec.x = sizeLimits[1];
-            newBreadth = relativeVec.x;
+            newBreadth = sizeLimits[1];
+            relativeVec.x = newBreadth - breadth;
         } else {
             newBreadth = breadth + relativeVec.x;
         }
 
         if (height + relativeVec.y < sizeLimits[2]) {
-            relativeVec.y = sizeLimits[2];
-            newHeight = relativeVec.y;
+            newHeight = sizeLimits[2];
+            relativeVec.y = newHeight - height;
         } else {
             newHeight = height + relativeVec.y;
         }
@@ -199,19 +199,19 @@ public:
 
         *modelMat = translateBack * rescaleMat * translateToCenter * (*modelMat);
 
-        printLeftFaceVertices();
+        // printLeftFaceVertices();
 
-        // print rescaling matrix
-        for(int i = 0; i < 4; i++) {
-            for(int j = 0; j < 4; j++) {
-                std::cout << (*modelMat)[i][j] << " ";
-            }
-            std::cout << std::endl;
-        }
+        // // print rescaling matrix
+        // for(int i = 0; i < 4; i++) {
+        //     for(int j = 0; j < 4; j++) {
+        //         std::cout << (*modelMat)[i][j] << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
 
-        glm::vec3 leftBottomFront = center - (breadth * rightVector + height * upVector + length * glm::cross(rightVector, upVector))/2.0f;
-        glm::vec4 newVec = (*modelMat) * glm::vec4(leftBottomFront, 1.0f);
-        std::cout << "New Left Bottom Front: " << newVec.x << ", " << newVec.y << ", " << newVec.z << std::endl;
+        // glm::vec3 leftBottomFront = center - (breadth * rightVector + height * upVector + length * glm::cross(rightVector, upVector))/2.0f;
+        // glm::vec4 newVec = (*modelMat) * glm::vec4(leftBottomFront, 1.0f);
+        // std::cout << "New Left Bottom Front: " << newVec.x << ", " << newVec.y << ", " << newVec.z << std::endl;
     }
 
     void printLeftFaceVertices() {
