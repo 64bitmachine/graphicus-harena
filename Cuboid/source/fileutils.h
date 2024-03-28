@@ -6,24 +6,37 @@
 
 // read shader file
 const char* readShaderSource(const char* filename) {
-    FILE* fp = fopen(filename, "r");
-    if (fp == NULL) {
-        std::cout << "Failed to open file: " << filename << std::endl;
-        return NULL;
-    }
+    FILE* fp;
+    errno_t err;
+
+    #ifdef _WIN32
+        // Use fopen_s for Windows
+        err = fopen_s(&fp, filename, "r");
+        if (err != 0) {
+            std::cout << "Failed to open file: " << filename << std::endl;
+            return nullptr;
+        }
+    #else
+        // Use fopen for other operating systems
+        fp = fopen(filename, "r");
+        if (fp == NULL) {
+            std::cout << "Failed to open file: " << filename << std::endl;
+            return nullptr;
+        }
+    #endif
 
     fseek(fp, 0, SEEK_END); // seek to end of file
     long size = ftell(fp);  // get file size
     fseek(fp, 0, SEEK_SET); // reset file pointer
 
     char* buffer = new char[size + 1];
-    // read file into buffer. 1 byte at a time, size bytes, from fp
-    fread(buffer, 1, size, fp);
-    buffer[size] = '\0';    // null terminate buffer
+    fread(buffer, 1, size, fp); // read file into buffer
+    buffer[size] = '\0';        // null terminate buffer
     fclose(fp);
 
     return buffer;
 }
+
 
 // create shader
 GLuint createShader(GLenum shaderType, const char* shaderSource) {

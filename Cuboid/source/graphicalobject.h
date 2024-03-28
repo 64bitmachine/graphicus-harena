@@ -11,12 +11,14 @@ class GraphicalObject {
     public:
         std::string name;
         GLuint VAO = 0;
-        Shader* shader;
+        Shader* shader = nullptr;
         std::vector<GraphicalObject*> children;
         glm::mat4 *projMat, *viewMat, *modelMat;
 
         GraphicalObject() {
             modelMat = new glm::mat4(1.0f);
+            projMat = new glm::mat4(1.0f);
+            viewMat = new glm::mat4(1.0f);
         }
 
         void addChild(GraphicalObject* child) {
