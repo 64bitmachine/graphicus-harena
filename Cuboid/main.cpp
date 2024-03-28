@@ -310,7 +310,7 @@ int main(int argc, char** argv) {
     Shader* markerShader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
     cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(2.0f, 1.0f, 1.5f), 
-    glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), true);
 
     // create marker
     cornerPoint = new Cuboid(glm::vec3(-0.5, -0.75, 1), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));

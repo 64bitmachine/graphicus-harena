@@ -15,18 +15,20 @@ private:
     glm::vec3 rightVector;
     glm::vec3 sizeLimits = glm::vec3(0.25f, 0.25f, 0.25f);
     glm::mat4* originalModelMat = new glm::mat4(1.0f);
+    bool wireframe;
 
     GLuint VBO;
     std::vector<GLfloat> vertices;
 
 public:
-    Cuboid(glm::vec3 center, glm::vec3 dims, glm::vec3 upVector, glm::vec3 rightVector) :
-        center(center), length(dims.x), breadth(dims.y), height(dims.z), upVector(upVector), rightVector(rightVector) {
+    Cuboid(glm::vec3 center, glm::vec3 dims, glm::vec3 upVector, glm::vec3 rightVector, bool wireframe = false) :
+        center(center), length(dims.x), breadth(dims.y), height(dims.z), upVector(upVector), rightVector(rightVector), wireframe(wireframe) {
         
         name = "cuboid";
         
         // Calculate vertices based on center, length, breadth, and height
-        calculateVertices();
+        if (wireframe) calculateEdges();
+        else calculateVerticesTriangles();
 
         // Generate and bind VAO
         glGenVertexArrays(1, &VAO);
@@ -54,18 +56,21 @@ public:
 
     void nextFrame() {
 
-        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        // glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
         // Bind VAO and draw
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
+        if (wireframe)
+            glDrawArrays(GL_LINES, 0, vertices.size() / 3);
+        else 
+            glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
         glBindVertexArray(0);
 
-        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        // glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     }
 
     // Method to calculate vertices based on center, length, breadth, and height
-    void calculateVertices() {
+    void calculateVerticesTriangles() {
         // Calculate half lengths
         float halfLength = length / 2.0f;
         float halfBreadth = breadth / 2.0f;
@@ -129,6 +134,45 @@ public:
 
         // print vertices computed
         std::cout << "Vertices computed" << std::endl;
+    }
+
+    void calculateEdges() {
+        // Calculate half lengths
+        float halfLength = length / 2.0f;
+        float halfBreadth = breadth / 2.0f;
+        float halfHeight = height / 2.0f;
+
+        // Calculate vertices
+        glm::vec3 frontBottomLeft = center - upVector * halfHeight - rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 frontBottomRight = center - upVector * halfHeight + rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 frontTopRight = center + upVector * halfHeight + rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 frontTopLeft = center + upVector * halfHeight - rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 backBottomLeft = center - upVector * halfHeight - rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 backBottomRight = center - upVector * halfHeight + rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 backTopRight = center + upVector * halfHeight + rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 backTopLeft = center + upVector * halfHeight - rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
+
+        // Now, we need to define the edges of the cuboid using the vertices
+        // We'll store the edge vertices in an array or vector
+
+        // Define the edges using pairs of vertices
+        vertices = {
+            frontBottomLeft.x, frontBottomLeft.y, frontBottomLeft.z, frontBottomRight.x, frontBottomRight.y, frontBottomRight.z,
+            frontBottomRight.x, frontBottomRight.y, frontBottomRight.z, frontTopRight.x, frontTopRight.y, frontTopRight.z,
+            frontTopRight.x, frontTopRight.y, frontTopRight.z, frontTopLeft.x, frontTopLeft.y, frontTopLeft.z,
+            frontTopLeft.x, frontTopLeft.y, frontTopLeft.z, frontBottomLeft.x, frontBottomLeft.y, frontBottomLeft.z,
+            backBottomLeft.x, backBottomLeft.y, backBottomLeft.z, backBottomRight.x, backBottomRight.y, backBottomRight.z,
+            backBottomRight.x, backBottomRight.y, backBottomRight.z, backTopRight.x, backTopRight.y, backTopRight.z,
+            backTopRight.x, backTopRight.y, backTopRight.z, backTopLeft.x, backTopLeft.y, backTopLeft.z,
+            backTopLeft.x, backTopLeft.y, backTopLeft.z, backBottomLeft.x, backBottomLeft.y, backBottomLeft.z,
+            frontBottomLeft.x, frontBottomLeft.y, frontBottomLeft.z, backBottomLeft.x, backBottomLeft.y, backBottomLeft.z,
+            frontBottomRight.x, frontBottomRight.y, frontBottomRight.z, backBottomRight.x, backBottomRight.y, backBottomRight.z,
+            frontTopRight.x, frontTopRight.y, frontTopRight.z, backTopRight.x, backTopRight.y, backTopRight.z,
+            frontTopLeft.x, frontTopLeft.y, frontTopLeft.z, backTopLeft.x, backTopLeft.y, backTopLeft.z
+        };
+
+        // print vertices computed
+        std::cout << "Vertices computed: " << std::endl;
     }
 
     void moveTo(glm::vec3 p) {
@@ -197,20 +241,21 @@ public:
         }
         glm::vec3 tempCenter = center + (relativeVec / 2.0f);
 
-        // move back to original position
-        glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), tempCenter);
-
         if (override) {
+            glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), center);
             *originalModelMat = translateBack * rescaleMat * translateToCenter * (*modelMat);
             *modelMat = *originalModelMat;
-        }
-        else
-            *modelMat = translateBack * rescaleMat * translateToCenter * (*originalModelMat);
 
-        if (override)
             for (GraphicalObject* child : children) {
                 *child->modelMat = translateBack * translateToCenter * (*child->modelMat);
             }
+        }
+        else{
+            // move back to original position
+            glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), tempCenter);
+            *modelMat = translateBack * rescaleMat * translateToCenter * (*originalModelMat);
+        }
+
 
         // printLeftFaceVertices();
 
