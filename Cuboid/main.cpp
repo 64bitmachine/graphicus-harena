@@ -227,6 +227,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     if (isMouseClicked) {
         cuboidResizeCallback(window, false);
     }
+
+    // std::cout << "xpos: " << xpos << ", ypos: " << ypos << std::endl;
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
@@ -261,6 +263,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         // delete cuboid
         delete initialCuboid;
         initialCuboid = nullptr;
+
+        // std::cout << "clickReleaseX: " << clickReleaseX << ", clickReleaseY: " << clickReleaseY << std::endl;
     }
 }
 

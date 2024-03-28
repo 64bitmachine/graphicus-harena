@@ -252,8 +252,8 @@ public:
 
         if (override) {
             glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), center);
-            *originalModelMat = translateBack * rescaleMat * translateToCenter * (*modelMat);
-            *modelMat = *originalModelMat;
+            *modelMat = translateBack * rescaleMat * translateToCenter * (*originalModelMat);
+            *originalModelMat = *modelMat;
 
             for (GraphicalObject* child : children) {
                 *child->modelMat = translateBack * translateToCenter * (*child->modelMat);
