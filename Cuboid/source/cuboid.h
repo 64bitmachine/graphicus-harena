@@ -20,6 +20,15 @@ private:
     GLuint VBO;
     std::vector<GLfloat> vertices;
 
+    #define FRONT_BOTTOM_LEFT center - (upVector * height + rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f
+    #define FRONT_BOTTOM_RIGHT center - (upVector * height - rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f
+    #define FRONT_TOP_RIGHT center + (upVector * height + rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f
+    #define FRONT_TOP_LEFT center + (upVector * height - rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f
+    #define BACK_BOTTOM_LEFT center - (upVector * height + rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f
+    #define BACK_BOTTOM_RIGHT center - (upVector * height - rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f
+    #define BACK_TOP_RIGHT center + (upVector * height + rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f
+    #define BACK_TOP_LEFT center + (upVector * height - rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f
+
 public:
     Cuboid(glm::vec3 center, glm::vec3 dims, glm::vec3 upVector, glm::vec3 rightVector, bool wireframe = false) :
         center(center), length(dims.x), breadth(dims.y), height(dims.z), upVector(upVector), rightVector(rightVector), wireframe(wireframe) {
@@ -77,14 +86,14 @@ public:
         float halfHeight = height / 2.0f;
 
         // Calculate vertices
-        glm::vec3 frontBottomLeft = center - upVector * halfHeight - rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 frontBottomRight = center - upVector * halfHeight + rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 frontTopRight = center + upVector * halfHeight + rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 frontTopLeft = center + upVector * halfHeight - rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 backBottomLeft = center - upVector * halfHeight - rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 backBottomRight = center - upVector * halfHeight + rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 backTopRight = center + upVector * halfHeight + rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 backTopLeft = center + upVector * halfHeight - rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 frontBottomLeft = FRONT_BOTTOM_LEFT;
+        glm::vec3 frontBottomRight = FRONT_BOTTOM_RIGHT;
+        glm::vec3 frontTopRight = FRONT_TOP_RIGHT;
+        glm::vec3 frontTopLeft = FRONT_TOP_LEFT;
+        glm::vec3 backBottomLeft = BACK_BOTTOM_LEFT;
+        glm::vec3 backBottomRight = BACK_BOTTOM_RIGHT;
+        glm::vec3 backTopRight = BACK_TOP_RIGHT;
+        glm::vec3 backTopLeft = BACK_TOP_LEFT;
 
         // Push vertices into vector
         vertices = {
@@ -143,14 +152,14 @@ public:
         float halfHeight = height / 2.0f;
 
         // Calculate vertices
-        glm::vec3 frontBottomLeft = center - upVector * halfHeight - rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 frontBottomRight = center - upVector * halfHeight + rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 frontTopRight = center + upVector * halfHeight + rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 frontTopLeft = center + upVector * halfHeight - rightVector * halfBreadth - glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 backBottomLeft = center - upVector * halfHeight - rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 backBottomRight = center - upVector * halfHeight + rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 backTopRight = center + upVector * halfHeight + rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
-        glm::vec3 backTopLeft = center + upVector * halfHeight - rightVector * halfBreadth + glm::cross(upVector, rightVector) * halfLength;
+        glm::vec3 frontBottomLeft = FRONT_BOTTOM_LEFT;
+        glm::vec3 frontBottomRight = FRONT_BOTTOM_RIGHT;
+        glm::vec3 frontTopRight = FRONT_TOP_RIGHT;
+        glm::vec3 frontTopLeft = FRONT_TOP_LEFT;
+        glm::vec3 backBottomLeft = BACK_BOTTOM_LEFT;
+        glm::vec3 backBottomRight = BACK_BOTTOM_RIGHT;
+        glm::vec3 backTopRight = BACK_TOP_RIGHT;
+        glm::vec3 backTopLeft = BACK_TOP_LEFT;
 
         // Now, we need to define the edges of the cuboid using the vertices
         // We'll store the edge vertices in an array or vector
@@ -281,10 +290,10 @@ public:
         float halfHeight = height / 2.0f;
 
         // Calculate left face vertices
-        glm::vec3 leftBottomFront = center - halfBreadth * rightVector - halfHeight * upVector - halfLength * glm::cross(rightVector, upVector);
-        glm::vec3 leftTopFront = center - halfBreadth * rightVector + halfHeight * upVector - halfLength * glm::cross(rightVector, upVector);
-        glm::vec3 leftBottomBack = center - halfBreadth * rightVector - halfHeight * upVector + halfLength * glm::cross(rightVector, upVector);
-        glm::vec3 leftTopBack = center - halfBreadth * rightVector + halfHeight * upVector + halfLength * glm::cross(rightVector, upVector);
+        glm::vec3 leftBottomFront = FRONT_BOTTOM_LEFT;
+        glm::vec3 leftTopFront = FRONT_TOP_LEFT;
+        glm::vec3 leftBottomBack = BACK_BOTTOM_LEFT;
+        glm::vec3 leftTopBack = BACK_TOP_LEFT;
 
         // Output left face vertices
         std::cout << "Left Bottom Front: (" << leftBottomFront.x << ", " << leftBottomFront.y << ", " << leftBottomFront.z << ")" << std::endl;
