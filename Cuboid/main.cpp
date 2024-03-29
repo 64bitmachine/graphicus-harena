@@ -17,6 +17,7 @@ Cuboid* cuboid = nullptr;
 double mouseX = 0.0, clickReleaseX = 0.0;
 double mouseY = 0.0, clickReleaseY = 0.0;
 bool isMouseClicked = false;
+bool keyReset = false;
 
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
@@ -170,12 +171,31 @@ void processInput(GLFWwindow* window) {
     }
 
     // 1 to rotate along cuboid upVec
-    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && !keyReset) {
         cuboid->rotateAboutUpVec();
+        keyReset = true;
     }
     if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
         rescaleCuboidUsingCornerPoint = !rescaleCuboidUsingCornerPoint;
         printf("Rescale cuboid using corner point: %s\n", rescaleCuboidUsingCornerPoint ? "Active" : "Inactive");
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS && !keyReset) {
+        cuboid->rescale(glm::vec3(1.0f, 1.0f, 1.0f), true);
+        keyReset = true;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS && !keyReset) {
+        cuboid->rescale(glm::vec3(-1.0f, -1.0f, -1.0f), true);
+        keyReset = true;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
+        keyReset = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
+        cuboid->printVerticesUsingMatrix();
     }
 }
 

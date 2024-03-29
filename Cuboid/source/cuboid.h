@@ -20,14 +20,14 @@ private:
     GLuint VBO;
     std::vector<GLfloat> vertices;
 
-    #define FRONT_BOTTOM_LEFT center - (upVector * height + rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f
-    #define FRONT_BOTTOM_RIGHT center - (upVector * height - rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f
-    #define FRONT_TOP_RIGHT center + (upVector * height + rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f
-    #define FRONT_TOP_LEFT center + (upVector * height - rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f
-    #define BACK_BOTTOM_LEFT center - (upVector * height + rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f
-    #define BACK_BOTTOM_RIGHT center - (upVector * height - rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f
-    #define BACK_TOP_RIGHT center + (upVector * height + rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f
-    #define BACK_TOP_LEFT center + (upVector * height - rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f
+    #define FRONT_BOTTOM_LEFT center - ((upVector * height + rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f)
+    #define FRONT_BOTTOM_RIGHT center - ((upVector * height - rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f)
+    #define FRONT_TOP_RIGHT center + ((upVector * height + rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f)
+    #define FRONT_TOP_LEFT center + ((upVector * height - rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f)
+    #define BACK_BOTTOM_LEFT center - ((upVector * height + rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f)
+    #define BACK_BOTTOM_RIGHT center - ((upVector * height - rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f)
+    #define BACK_TOP_RIGHT center + ((upVector * height + rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f)
+    #define BACK_TOP_LEFT center + ((upVector * height - rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f)
 
 public:
     Cuboid(glm::vec3 center, glm::vec3 dims, glm::vec3 upVector, glm::vec3 rightVector, bool wireframe = false) :
@@ -201,8 +201,12 @@ public:
     }
 
     void rescale(glm::vec3 relativeVec, bool override) {
-        
         if (relativeVec == glm::vec3(0.0f)) { return; }
+
+        float dx = glm::dot(relativeVec, rightVector);
+        float dy = glm::dot(relativeVec, upVector);
+        float dz = glm::dot(relativeVec, glm::cross(rightVector, upVector));
+        relativeVec = glm::vec3(dx, dy, dz);
 
         float newLength, newBreadth, newHeight;
         // update the relativeVec to remove invalid scaling
@@ -227,12 +231,25 @@ public:
             newHeight = height + relativeVec.y;
         }
 
+        glm::vec3 cuboidOrientation = getCuboidOrientation();
+        glm::mat4 rotateToCuboidOrientationX = glm::rotate(glm::mat4(1.0f), -glm::radians(cuboidOrientation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::mat4 rotateToCuboidOrientationY = glm::rotate(glm::mat4(1.0f), -glm::radians(cuboidOrientation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 rotateToCuboidOrientationZ = glm::rotate(glm::mat4(1.0f), -glm::radians(cuboidOrientation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::mat4 rotateToCuboidOrientation = rotateToCuboidOrientationX * rotateToCuboidOrientationY * rotateToCuboidOrientationZ;
+
+        // revert rotation
+        glm::mat4 revertRotX = glm::rotate(glm::mat4(1.0f), glm::radians(cuboidOrientation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::mat4 revertRotY = glm::rotate(glm::mat4(1.0f), glm::radians(cuboidOrientation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 revertRotZ = glm::rotate(glm::mat4(1.0f), glm::radians(cuboidOrientation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::mat4 revertRot = revertRotX * revertRotY * revertRotZ;
+
+
         // translation matrix
         glm::mat4 translateToCenter = glm::translate(glm::mat4(1.0f), -center);
 
-        float scaleX = newBreadth / breadth;
-        float scaleY = newHeight / height;
-        float scaleZ = newLength / length;
+        float scaleX = (newBreadth / breadth);
+        float scaleY = (newHeight / height);
+        float scaleZ = (newLength / length);
 
         // std::cout << "Scale X: " << scaleX << std::endl;
         // std::cout << "Scale Y: " << scaleY << std::endl;
@@ -241,18 +258,16 @@ public:
         // rescaling matrix
         glm::mat4 rescaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleX, scaleY, scaleZ));
 
-
+        glm::vec3 dc = (rightVector * relativeVec.x + upVector * relativeVec.y + glm::cross(rightVector, upVector) * relativeVec.z) / 2.0f;
+ 
         if (override) {
-            center += (relativeVec / 2.0f);
+            center += dc;
             length = newLength;
             breadth = newBreadth;
             height = newHeight;
-        }
-        glm::vec3 tempCenter = center + (relativeVec / 2.0f);
 
-        if (override) {
             glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), center);
-            *modelMat = translateBack * rescaleMat * translateToCenter * (*originalModelMat);
+            *modelMat = translateBack * revertRot * rescaleMat * rotateToCuboidOrientation * translateToCenter * (*originalModelMat);
             *originalModelMat = *modelMat;
 
             for (GraphicalObject* child : children) {
@@ -260,10 +275,13 @@ public:
             }
         }
         else{
+            glm::vec3 tempCenter = center + dc;
             // move back to original position
             glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), tempCenter);
-            *modelMat = translateBack * rescaleMat * translateToCenter * (*originalModelMat);
+            *modelMat = translateBack * revertRot * rescaleMat * rotateToCuboidOrientation * translateToCenter * (*originalModelMat);
         }
+
+        printCuboidState();
 
 
         // printLeftFaceVertices();
@@ -305,10 +323,13 @@ public:
     void rotateAboutUpVec() {
         // std::cout << "Rotate Up" << std::endl;
 
-        glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(0.5f), upVector);
+        glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(40.0f), upVector);
 
         // Rotate right vector and forward vector using rotation matrix
-        rightVector = glm::normalize(glm::vec3(rotationMatrix * glm::vec4(rightVector, 0.0f)));
+        glm::vec4 newRightVec = rotationMatrix * glm::vec4(rightVector, 1.0f);
+        rightVector = glm::normalize(glm::vec3(newRightVec.x, newRightVec.y, newRightVec.z));
+        glm::vec4 newUpVec = rotationMatrix * glm::vec4(upVector, 1.0f);
+        upVector = glm::normalize(glm::vec3(newUpVec.x, newUpVec.y, newUpVec.z));
 
         // update model matrix
 
@@ -357,10 +378,10 @@ public:
         int cornerH = activeCorner ^ 2;
         int cornerL = activeCorner ^ 4;
 
-        std::cout << "Active Corner: " << activeCorner << std::endl;
-        std::cout << "Corner B: " << cornerB << std::endl;
-        std::cout << "Corner H: " << cornerH << std::endl;
-        std::cout << "Corner L: " << cornerL << std::endl;
+        // std::cout << "Active Corner: " << activeCorner << std::endl;
+        // std::cout << "Corner B: " << cornerB << std::endl;
+        // std::cout << "Corner H: " << cornerH << std::endl;
+        // std::cout << "Corner L: " << cornerL << std::endl;
 
         glm::vec3 cornerBVec = glm::normalize(getCorner(activeCorner) - getCorner(cornerB));
         glm::vec3 cornerHVec = glm::normalize(getCorner(activeCorner) - getCorner(cornerH));
@@ -370,6 +391,111 @@ public:
         float deltaH = glm::dot(cornerHVec, drag);
         float deltaL = glm::dot(cornerLVec, drag);
 
+        std::cout << "Delta B: " << deltaB << std::endl;
+        std::cout << "Delta H: " << deltaH << std::endl;
+        std::cout << "Delta L: " << deltaL << std::endl;
+
         rescale(glm::vec3(deltaB, deltaH, deltaL), override);
+        glm::vec3 zeroVertex = getCorner(0);
+        std::cout << "Zero Vertex: (" << zeroVertex.x << ", " << zeroVertex.y << ", " << zeroVertex.z << ")" << std::endl;
     }
+
+    void printCuboidState() {
+        std::cout << "============= Cuboid State ============" << std::endl;
+        std::cout << "Center: (" << center.x << ", " << center.y << ", " << center.z << ")" << std::endl;
+        std::cout << "Right: (" << rightVector.x << ", " << rightVector.y << ", " << rightVector.z << ")" << std::endl;
+        std::cout << "Up: (" << upVector.x << ", " << upVector.y << ", " << upVector.z << ")" << std::endl;
+        std::cout << "Height: " << height << std::endl;
+        std::cout << "Breadth: " << breadth << std::endl;
+        std::cout << "Length: " << length << std::endl;
+
+        float l1, l2, l3, l4, b1, b2, b3, b4, h1, h2, h3, h4;
+        l1 = glm::distance(getCorner(5), getCorner(1));
+        l2 = glm::distance(getCorner(0), getCorner(4));
+        l3 = glm::distance(getCorner(3), getCorner(7));
+        l4 = glm::distance(getCorner(2), getCorner(6));
+
+        std::cout << "L1: " << l1 << ", L2: " << l2 << ", L3: " << l3 << ", L4: " << l4 << std::endl;
+
+        b1 = glm::distance(getCorner(1), getCorner(0));
+        b2 = glm::distance(getCorner(2), getCorner(3));
+        b3 = glm::distance(getCorner(4), getCorner(5));
+        b4 = glm::distance(getCorner(6), getCorner(7));
+
+        std::cout << "B1: " << b1 << ", B2: " << b2 << ", B3: " << b3 << ", B4: " << b4 << std::endl;
+
+        h1 = glm::distance(getCorner(0), getCorner(2));
+        h2 = glm::distance(getCorner(1), getCorner(3));
+        h3 = glm::distance(getCorner(4), getCorner(6));
+        h4 = glm::distance(getCorner(5), getCorner(7));
+
+        std::cout << "H1: " << h1 << ", H2: " << h2 << ", H3: " << h3 << ", H4: " << h4 << std::endl;
+
+        for (int i = 0; i < 8; i++) {
+            std::cout << "Corner " << i << ": (" << getCorner(i).x << ", " << getCorner(i).y << ", " << getCorner(i).z << ")" << std::endl;
+        }
+
+        printVerticesUsingMatrix();
+        printCuboidOrientation();
+
+        std::cout << "=======================================" << std::endl;
+    }
+
+    void printVerticesUsingMatrix() {
+        glm::vec3 originalUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::vec3 originalRight = glm::vec3(1.0f, 0.0f, 0.0f);
+        float originalL = 2;
+        float originalB = 1;
+        float originalH = 1.5;
+        // vertex 0 front bottom left
+        glm::vec4 v0 = (*modelMat) * glm::vec4((- originalRight * originalB - originalUp * originalH + glm::cross(originalRight, originalUp) * originalL) / 2.0f, 1.0f);
+        // vertex 1 front bottom right
+        glm::vec4 v1 = (*modelMat) * glm::vec4((+ originalRight * originalB - originalUp * originalH + glm::cross(originalRight, originalUp) * originalL) / 2.0f, 1.0f);
+        // vertex 2 front top left
+        glm::vec4 v2 = (*modelMat) * glm::vec4((- originalRight * originalB + originalUp * originalH + glm::cross(originalRight, originalUp) * originalL) / 2.0f, 1.0f);
+        // vertex 3 front top right
+        glm::vec4 v3 = (*modelMat) * glm::vec4((+ originalRight * originalB + originalUp * originalH + glm::cross(originalRight, originalUp) * originalL) / 2.0f, 1.0f);
+        // vertex 4 back bottom left
+        glm::vec4 v4 = (*modelMat) * glm::vec4((- originalRight * originalB - originalUp * originalH - glm::cross(originalRight, originalUp) * originalL) / 2.0f, 1.0f);
+        // vertex 5 back bottom right
+        glm::vec4 v5 = (*modelMat) * glm::vec4((+ originalRight * originalB - originalUp * originalH - glm::cross(originalRight, originalUp) * originalL) / 2.0f, 1.0f);
+        // vertex 6 back top left
+        glm::vec4 v6 = (*modelMat) * glm::vec4((- originalRight * originalB + originalUp * originalH - glm::cross(originalRight, originalUp) * originalL) / 2.0f, 1.0f);
+        // vertex 7 back top right
+        glm::vec4 v7 = (*modelMat) * glm::vec4((+ originalRight * originalB + originalUp * originalH - glm::cross(originalRight, originalUp) * originalL) / 2.0f, 1.0f);
+
+        std::cout << "V0: (" << v0.x << ", " << v0.y << ", " << v0.z << ")" << std::endl;
+        std::cout << "V1: (" << v1.x << ", " << v1.y << ", " << v1.z << ")" << std::endl;
+        std::cout << "V2: (" << v2.x << ", " << v2.y << ", " << v2.z << ")" << std::endl;
+        std::cout << "V3: (" << v3.x << ", " << v3.y << ", " << v3.z << ")" << std::endl;
+        std::cout << "V4: (" << v4.x << ", " << v4.y << ", " << v4.z << ")" << std::endl;
+        std::cout << "V5: (" << v5.x << ", " << v5.y << ", " << v5.z << ")" << std::endl;
+        std::cout << "V6: (" << v6.x << ", " << v6.y << ", " << v6.z << ")" << std::endl;
+        std::cout << "V7: (" << v7.x << ", " << v7.y << ", " << v7.z << ")" << std::endl;
+    }
+
+    glm::vec3 getCuboidOrientation() {
+        // (angle around X-axis)
+        float rotX = acos(glm::dot(upVector, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+        // (angle around Y-axis)
+        float rotY = acos(glm::dot(rightVector, glm::vec3(1.0f, 0.0f, 0.0f)));
+
+        // (angle around Z-axis)
+        float rotZ = atan2(rightVector.y, rightVector.x);
+
+        // Convert angles from radians to degrees
+        rotX = glm::degrees(rotX);
+        rotY = glm::degrees(rotY);
+        rotZ = glm::degrees(rotZ);
+
+        return glm::vec3(rotX, rotY, rotZ);
+    }
+
+    void printCuboidOrientation() {
+        glm::vec3 cuboidOrientation = getCuboidOrientation();
+        std::cout << "(X-axis rotation): " << cuboidOrientation.x << " degrees" << std::endl;
+        std::cout << "(Y-axis rotation): " << cuboidOrientation.y << " degrees" << std::endl;
+        std::cout << "(Z-axis rotation): " << cuboidOrientation.z << " degrees" << std::endl;
+}
 };
