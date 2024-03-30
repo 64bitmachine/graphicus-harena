@@ -281,22 +281,7 @@ public:
             *modelMat = translateBack * revertRot * rescaleMat * rotateToCuboidOrientation * translateToCenter * (*originalModelMat);
         }
 
-        printCuboidState();
-
-
-        // printLeftFaceVertices();
-
-        // // print rescaling matrix
-        // for(int i = 0; i < 4; i++) {
-        //     for(int j = 0; j < 4; j++) {
-        //         std::cout << (*modelMat)[i][j] << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
-
-        // glm::vec3 leftBottomFront = center - (breadth * rightVector + height * upVector + length * glm::cross(rightVector, upVector))/2.0f;
-        // glm::vec4 newVec = (*modelMat) * glm::vec4(leftBottomFront, 1.0f);
-        // std::cout << "New Left Bottom Front: " << newVec.x << ", " << newVec.y << ", " << newVec.z << std::endl;
+        // printCuboidState();
     }
 
     void printLeftFaceVertices() {
@@ -497,5 +482,23 @@ public:
         std::cout << "(X-axis rotation): " << cuboidOrientation.x << " degrees" << std::endl;
         std::cout << "(Y-axis rotation): " << cuboidOrientation.y << " degrees" << std::endl;
         std::cout << "(Z-axis rotation): " << cuboidOrientation.z << " degrees" << std::endl;
-}
+    }
+
+    void move(glm::vec3 p, bool override = false) {
+
+        glm::mat4 translateMat = glm::translate(glm::mat4(1.0f), p);
+
+        if (override) {
+            center += p;
+            *modelMat = translateMat * (*originalModelMat);
+            *originalModelMat = *modelMat;
+
+            for(GraphicalObject* child : children) {
+                *child->modelMat = translateMat * (*child->modelMat);
+            }
+        }
+        else {
+            *modelMat = translateMat * (*originalModelMat);
+        }
+    }
 };
