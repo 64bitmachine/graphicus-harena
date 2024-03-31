@@ -204,6 +204,14 @@ void processInput(GLFWwindow* window) {
         cuboidMoveMode = !cuboidMoveMode;
         printf("Cuboid move mode: %s\n", cuboidMoveMode ? "Active" : "Inactive");
     }
+
+    if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) {
+        cuboid->rescale(glm::vec3(0.01f, 0.0f, 0.0f), true);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS) {
+        cuboid->rescale(glm::vec3(-0.01f, 0.0f, 0.0f), true);
+    }
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {

@@ -203,11 +203,6 @@ public:
     void rescale(glm::vec3 relativeVec, bool override) {
         if (relativeVec == glm::vec3(0.0f)) { return; }
 
-        float dx = glm::dot(relativeVec, rightVector);
-        float dy = glm::dot(relativeVec, upVector);
-        float dz = glm::dot(relativeVec, glm::cross(rightVector, upVector));
-        relativeVec = glm::vec3(dx, dy, dz);
-
         float newLength, newBreadth, newHeight;
         // update the relativeVec to remove invalid scaling
         if (length + relativeVec.z < sizeLimits[0]) {
@@ -250,10 +245,6 @@ public:
         float scaleX = (newBreadth / breadth);
         float scaleY = (newHeight / height);
         float scaleZ = (newLength / length);
-
-        // std::cout << "Scale X: " << scaleX << std::endl;
-        // std::cout << "Scale Y: " << scaleY << std::endl;
-        // std::cout << "Scale Z: " << scaleZ << std::endl;
 
         // rescaling matrix
         glm::mat4 rescaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleX, scaleY, scaleZ));
