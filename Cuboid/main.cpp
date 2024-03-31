@@ -173,23 +173,27 @@ void processInput(GLFWwindow* window) {
     }
 
     // 1 to rotate along cuboid upVec
-    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && !keyReset) {
-        cuboid->rotateAboutUpVec();
-        keyReset = true;
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        cuboid->rotate(0);
     }
     if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
-        rescaleCuboidUsingCornerPoint = !rescaleCuboidUsingCornerPoint;
-        printf("Rescale cuboid using corner point: %s\n", rescaleCuboidUsingCornerPoint ? "Active" : "Inactive");
+        cuboid->rotate(1);
     }
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+        cuboid->rotate(2);
+    }
+    // if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+    //     rescaleCuboidUsingCornerPoint = !rescaleCuboidUsingCornerPoint;
+    //     printf("Rescale cuboid using corner point: %s\n", rescaleCuboidUsingCornerPoint ? "Active" : "Inactive");
+    // }
 
-    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS && !keyReset) {
-        cuboid->rescale(glm::vec3(1.0f, 1.0f, 1.0f), true);
-        keyReset = true;
-    }
+    // if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS && !keyReset) {
+    //     cuboid->rescale(glm::vec3(1.0f, 1.0f, 1.0f), true);
+    //     keyReset = true;
+    // }
 
     if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS && !keyReset) {
-        cuboid->rescale(glm::vec3(-1.0f, -1.0f, -1.0f), true);
-        keyReset = true;
+        cuboid->reset();
     }
 
     if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
@@ -371,25 +375,6 @@ int main(int argc, char** argv) {
 
     cuboid->setShader(shader);
     cornerPoint->setShader(shader);
-
-    int lengthAxis = 4;
-
-    Shader *lineShader = new Shader("shaders/line.vs", "shaders/line.fs");
-    LineSegment *upAxis, *rightAxis, *frontAxis;
-
-    // Initialize upAxis, rightAxis, and frontAxis
-    upAxis = new LineSegment(lengthAxis, cuboid->getUpVector(), cuboid->getCenter(), glm::vec3(1.0f, 0.0f, 0.0f), "up");
-    rightAxis = new LineSegment(lengthAxis, cuboid->getRightVector(), cuboid->getCenter(), glm::vec3(0.0f, 1.0f, 0.0f), "right");
-    frontAxis = new LineSegment(lengthAxis, 
-    glm::cross(cuboid->getUpVector(), cuboid->getRightVector()), cuboid->getCenter(), glm::vec3(0.0f, 0.0f, 1.0f), "back");
-    
-    upAxis->setShader(lineShader);
-    frontAxis->setShader(lineShader);
-    rightAxis->setShader(lineShader);
-
-    cuboid->children.push_back(upAxis);
-    cuboid->children.push_back(rightAxis);
-    cuboid->children.push_back(frontAxis);
 
     do {
 
