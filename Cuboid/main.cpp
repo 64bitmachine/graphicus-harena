@@ -200,8 +200,10 @@ void processInput(GLFWwindow* window) {
         keyReset = false;
     }
 
-    if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
-        cuboid->printVerticesUsingMatrix();
+    if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS && !keyReset) {
+        // cuboid->printVerticesUsingMatrix();
+        cuboid->rescale(glm::vec3(0.5f, 0.5f, 0.5f), true);
+        keyReset = true;
     }
 
     if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS && !keyReset) {
@@ -358,8 +360,8 @@ int main(int argc, char** argv) {
     Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     Shader* markerShader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
-    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(2.0f, 1.0f, 1.5f), 
-    glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), true);
+    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.414f, 1.414f, 1.414f), 
+    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)), true);
 
     // create marker
     cornerPoint = new Cuboid(glm::vec3(-0.5, -0.75, 1), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));

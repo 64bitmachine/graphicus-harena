@@ -7,6 +7,9 @@
 #include "line.h"
 #include "graphicalobject.h"
 
+// macro to get normalized cross
+#define NORM_CROSS(a, b) glm::normalize(glm::cross(a, b))
+
 class Cuboid : public GraphicalObject {
 private:
     glm::vec3 center;
@@ -21,14 +24,14 @@ private:
     GLuint VBO;
     std::vector<GLfloat> vertices;
 
-    #define FRONT_BOTTOM_LEFT center - ((upVector * height + rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f)
-    #define FRONT_BOTTOM_RIGHT center - ((upVector * height - rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f)
-    #define FRONT_TOP_RIGHT center + ((upVector * height + rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f)
-    #define FRONT_TOP_LEFT center + ((upVector * height - rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f)
-    #define BACK_BOTTOM_LEFT center - ((upVector * height + rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f)
-    #define BACK_BOTTOM_RIGHT center - ((upVector * height - rightVector * breadth - glm::cross(upVector, rightVector) * length) / 2.0f)
-    #define BACK_TOP_RIGHT center + ((upVector * height + rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f)
-    #define BACK_TOP_LEFT center + ((upVector * height - rightVector * breadth + glm::cross(upVector, rightVector) * length) / 2.0f)
+    #define FRONT_BOTTOM_LEFT center - ((upVector * height + rightVector * breadth + NORM_CROSS(upVector, rightVector) * length) / 2.0f)
+    #define FRONT_BOTTOM_RIGHT center - ((upVector * height - rightVector * breadth + NORM_CROSS(upVector, rightVector) * length) / 2.0f)
+    #define FRONT_TOP_RIGHT center + ((upVector * height + rightVector * breadth - NORM_CROSS(upVector, rightVector) * length) / 2.0f)
+    #define FRONT_TOP_LEFT center + ((upVector * height - rightVector * breadth - NORM_CROSS(upVector, rightVector) * length) / 2.0f)
+    #define BACK_BOTTOM_LEFT center - ((upVector * height + rightVector * breadth - NORM_CROSS(upVector, rightVector) * length) / 2.0f)
+    #define BACK_BOTTOM_RIGHT center - ((upVector * height - rightVector * breadth - NORM_CROSS(upVector, rightVector) * length) / 2.0f)
+    #define BACK_TOP_RIGHT center + ((upVector * height + rightVector * breadth + NORM_CROSS(upVector, rightVector) * length) / 2.0f)
+    #define BACK_TOP_LEFT center + ((upVector * height - rightVector * breadth + NORM_CROSS(upVector, rightVector) * length) / 2.0f)
 
 public:
     Cuboid(glm::vec3 center, glm::vec3 dims, glm::vec3 upVector, glm::vec3 rightVector, bool wireframe = false) :
@@ -256,6 +259,7 @@ public:
     }
 
     void rescale(glm::vec3 sizeDiffVec, bool override) {
+        printCuboidState();
         if (sizeDiffVec == glm::vec3(0.0f)) { return; }
 
         float newLength, newBreadth, newHeight;
@@ -515,8 +519,8 @@ public:
             std::cout << "Corner " << i << ": (" << getCorner(i).x << ", " << getCorner(i).y << ", " << getCorner(i).z << ")" << std::endl;
         }
 
-        printVerticesUsingMatrix();
-        printCuboidOrientation();
+        // printVerticesUsingMatrix();
+        // printCuboidOrientation();
 
         std::cout << "=======================================" << std::endl;
     }
