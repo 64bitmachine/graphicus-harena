@@ -114,41 +114,44 @@ glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int sc
 }
 
 void resizeCuboid(glm::vec3 relativeVec, bool override) {
-    switch (getScaleDimension(relativeVec, cuboid->getUpVector(), cuboid->getRightVector()))
-    {
-        case ScaleDimension::LENGTH_BREADTH:
-            std::cout << "Length and breadth" << std::endl;
-            break;
+    // switch (getScaleDimension(relativeVec, cuboid->getUpVector(), cuboid->getRightVector()))
+    // {
+    //     case ScaleDimension::LENGTH_BREADTH:
+    //         std::cout << "Length and breadth" << std::endl;
+    //         break;
         
-        case ScaleDimension::LENGTH_HEIGHT:
-            std::cout << "Length and height" << std::endl;
-            break;
+    //     case ScaleDimension::LENGTH_HEIGHT:
+    //         std::cout << "Length and height" << std::endl;
+    //         break;
 
-        case ScaleDimension::BREADTH_HEIGHT:
-            std::cout << "Breadth and height" << std::endl;
-            break;
+    //     case ScaleDimension::BREADTH_HEIGHT:
+    //         std::cout << "Breadth and height" << std::endl;
+    //         break;
 
-        case ScaleDimension::LENGTH:
-            std::cout << "Length" << std::endl;
-            break;
+    //     case ScaleDimension::LENGTH:
+    //         std::cout << "Length" << std::endl;
+    //         break;
         
-        case ScaleDimension::HEIGHT:
-            std::cout << "Height" << std::endl;
-            break;
+    //     case ScaleDimension::HEIGHT:
+    //         std::cout << "Height" << std::endl;
+    //         break;
 
-        case ScaleDimension::BREADTH:
-            std::cout << "Breadth" << std::endl;
-            break;
+    //     case ScaleDimension::BREADTH:
+    //         std::cout << "Breadth" << std::endl;
+    //         break;
 
-        default:
-            // print invalid scaling
-            std::cout << "Invalid scaling" << std::endl;
-            break;
-    }
+    //     default:
+    //         // print invalid scaling
+    //         std::cout << "Invalid scaling" << std::endl;
+    //         break;
+    // }
 
-    if (rescaleCuboidUsingCornerPoint) cuboid->rescale(relativeVec, override);
-    else if (cuboidMoveMode) cuboid->move(relativeVec, override);
-    else cuboid->rescaleUsingCorner(relativeVec, override);
+    // if (!rescaleCuboidUsingCornerPoint) cuboid->rescale(relativeVec, override);
+    // else if (cuboidMoveMode) cuboid->move(relativeVec, override);
+    // else cuboid->rescaleUsingCorner(relativeVec, override);
+
+    cuboid->rescale(relativeVec, override);
+
 }
 
 
@@ -201,8 +204,7 @@ void processInput(GLFWwindow* window) {
     }
 
     if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS && !keyReset) {
-        // cuboid->printVerticesUsingMatrix();
-        cuboid->rescale(glm::vec3(0.5f, 0.5f, 0.5f), true);
+        cuboid->rescale(glm::vec3(0.2f, 0.5f, 0.5f), true);
         keyReset = true;
     }
 
@@ -242,10 +244,14 @@ void cuboidResizeCallback(GLFWwindow* window, bool override) {
     glfwGetCursorPos(window, &clickReleaseX, &clickReleaseY);
     // Calculate relative vector
     glm::vec3 relativeVec = getRelVec(clickReleaseX, clickReleaseY, mouseX, mouseY, SCR_WIDTH, SCR_HEIGHT);
-    std::cout << "Relative vector: " << relativeVec.x << ", " << relativeVec.y << ", " << relativeVec.z << std::endl;
+    // std::cout << "Relative vector: " << relativeVec.x << ", " << relativeVec.y << ", " << relativeVec.z << std::endl;
+
+    float db = glm::dot(relativeVec, cuboid->getRightVector());
+    float dh = glm::dot(relativeVec, cuboid->getUpVector());
+    float dl = glm::dot(relativeVec, glm::cross(cuboid->getRightVector(), cuboid->getUpVector()));
 
     // resizeCuboid
-    resizeCuboid(relativeVec, override);
+    resizeCuboid(glm::vec3(db, dh, dl), override);
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -360,8 +366,9 @@ int main(int argc, char** argv) {
     Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     Shader* markerShader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
-    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.414f, 1.414f, 1.414f), 
-    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)), true);
+    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
+    // glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(0.95882f, 0.0f, -0.284015f)), true);
+    glm::normalize(glm::vec3(1.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, -1.0f, 0.0f)), true);
 
     // create marker
     cornerPoint = new Cuboid(glm::vec3(-0.5, -0.75, 1), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -377,6 +384,7 @@ int main(int argc, char** argv) {
 
     cuboid->setShader(shader);
     cornerPoint->setShader(shader);
+    cuboid->createAxes();
 
     do {
 
