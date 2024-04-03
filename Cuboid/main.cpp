@@ -147,10 +147,10 @@ void resizeCuboid(glm::vec3 relativeVec, bool override) {
     // }
 
     // if (!rescaleCuboidUsingCornerPoint) cuboid->rescale(relativeVec, override);
-    // else if (cuboidMoveMode) cuboid->move(relativeVec, override);
-    // else cuboid->rescaleUsingCorner(relativeVec, override);
+    if (cuboidMoveMode) cuboid->move(relativeVec, override);
+    else cuboid->rescaleUsingCorner(relativeVec, override);
 
-    cuboid->rescale(relativeVec, override);
+    // cuboid->rescale(relativeVec, override);
 
 }
 
@@ -210,6 +210,7 @@ void processInput(GLFWwindow* window) {
 
     if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS && !keyReset) {
         cuboidMoveMode = !cuboidMoveMode;
+        keyReset = true;
         printf("Cuboid move mode: %s\n", cuboidMoveMode ? "Active" : "Inactive");
     }
 
@@ -366,9 +367,9 @@ int main(int argc, char** argv) {
     Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     Shader* markerShader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
-    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
+    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.5f, 2.0f), 
     // glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(0.95882f, 0.0f, -0.284015f)), true);
-    glm::normalize(glm::vec3(1.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, -1.0f, 0.0f)), true);
+    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
 
     // create marker
     cornerPoint = new Cuboid(glm::vec3(-0.5, -0.75, 1), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
