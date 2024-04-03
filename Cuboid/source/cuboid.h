@@ -10,6 +10,19 @@
 // macro to get normalized cross
 #define NORM_CROSS(a, b) glm::normalize(glm::cross(a, b))
 
+// macro to print matrix using for loop 
+#define PRINT_MAT(mat) \
+    for (int i = 0; i < 4; i++) { \
+        for (int j = 0; j < 4; j++) { \
+            std::cout << mat[i][j] << " "; \
+        } \
+        std::cout << std::endl; \
+    }
+
+#define PRINT_VEC(vec) \
+    std::cout << "x: " << vec.x << " y: " << vec.y << " z: " << vec.z << std::endl;
+
+
 class Cuboid : public GraphicalObject {
 private:
     glm::vec3 center;
@@ -260,8 +273,20 @@ public:
         return center;
     }
 
+    glm::mat4 computeProjectionMatrix(const glm::vec3& u) {
+        // Normalize the vector u
+        glm::vec3 u_normalized = glm::normalize(u);
+
+        // Compute the projection matrix
+        glm::mat4 P = glm::outerProduct(u_normalized, u_normalized);
+
+        return P;
+    }
+
     void rescale(glm::vec3 sizeDiffVec, bool override) {
         printCuboidState();
+        printVerticesUsingMatrix();
+
         if (sizeDiffVec == glm::vec3(0.0f)) { return; }
 
         float newLength, newBreadth, newHeight;
@@ -299,8 +324,23 @@ public:
  
         // translation matrix
         glm::mat4 translateToCenter = glm::translate(glm::mat4(1.0f), -center);
+
+        glm::mat4 projB = computeProjectionMatrix(rightVector);
+
+        glm::mat4 projH = computeProjectionMatrix(upVector);
+        
+        glm::mat4 projL = computeProjectionMatrix(frontVec);
+
         // rescaling matrix
-        glm::mat4 rescaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(scaleX, scaleY, scaleZ));
+        glm::mat4 rescaleMat = (
+            projB * scaleX +
+            projH * scaleY +
+            projL * scaleZ);
+
+        rescaleMat[3][3] = 1.0f;
+
+        glm::mat4 undoProj = glm::inverse(rescaleMat);
+
         glm::vec3 tempCenter = center + dc;
         if (override) {
             center = tempCenter;
@@ -311,6 +351,23 @@ public:
             glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), center);
             *modelMat = translateBack * rescaleMat * translateToCenter * (*originalModelMat);
             *originalModelMat = *modelMat;
+
+            // PRINT_MAT((computeProjectionMatrix(upVector) * computeProjectionMatrix(rightVector)));
+            // PRINT_VEC((computeProjectionMatrix(rightVector) * glm::vec4(-0.707107f, 0.0f, 0.5f, 1.0f)));
+            // // PRINT_MAT((computeProjectionMatrix(frontVec)));
+
+            // PRINT_MAT(translateToCenter);
+            // glm::vec4 tempVec = translateToCenter * glm::vec4(-0.707107f, 0.0f, 0.5f, 1.0f);
+            // PRINT_VEC(tempVec);
+            PRINT_MAT(rescaleMat);
+            PRINT_MAT(undoProj);
+            // tempVec = rescaleMat * tempVec;
+            // PRINT_VEC(tempVec);
+            // PRINT_MAT(translateBack);
+            // tempVec = translateBack * tempVec;
+            // PRINT_VEC(tempVec);            
+            // PRINT_MAT((*modelMat));
+            // PRINT_MAT((*originalModelMat));
 
             for (GraphicalObject* child : children) {
                 *child->modelMat = translateBack * translateToCenter * (*child->modelMat);
