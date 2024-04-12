@@ -204,6 +204,7 @@ void processInput(GLFWwindow* window) {
     }
 
     if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS && !keyReset) {
+        // cuboid->printVerticesUsingMatrix();
         cuboid->rescale(glm::vec3(0.2f, 0.5f, 0.5f), true);
         keyReset = true;
     }
