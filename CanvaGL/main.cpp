@@ -11,6 +11,7 @@
 #include "source/camera.h"
 #include "source/shader.h"
 #include "source/cuboid.h"
+#include "source/scene.h"
 
 Cuboid* cuboid = nullptr;
 
@@ -171,6 +172,10 @@ int main(int argc, char** argv) {
     cornerPoint->setShader(shader);
     cuboid->createAxes();
 
+    Scene* scene = new Scene();
+    scene->add(cuboid);
+    scene->add(cornerPoint);
+    
     do {
 
         // per-frame time logic
@@ -182,25 +187,10 @@ int main(int argc, char** argv) {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
         // projection and view matrix
         projection = glm::perspective(glm::radians(g_camera->get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
         view = g_camera->get_view_matrix();
-
-        cuboid->setProjMat(&projection);
-        cuboid->setViewMat(&view);
-        cuboid->render();
-
-        cornerPoint->setProjMat(&projection);
-        cornerPoint->setViewMat(&view);
-        cornerPoint->render();
-
-        if (initialCuboid != nullptr) {
-            initialCuboid->setShader(markerShader);
-            initialCuboid->setProjMat(&projection);
-            initialCuboid->setViewMat(&view);
-            initialCuboid->render();
-        }
+        scene->render(&projection, &view);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
