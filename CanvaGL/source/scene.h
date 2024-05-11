@@ -21,6 +21,13 @@ class Scene {
             objects.clear();
         }
 
+        /**
+         * Adds a graphical object to the scene.
+         *
+         * @param object Pointer to the graphical object to be added.
+         *
+         * @throws None
+         */
         void add(GraphicalObject* object) {
             objects.push_back(object);
         }

@@ -12,6 +12,7 @@
 #include "source/shader.h"
 #include "source/cuboid.h"
 #include "source/scene.h"
+#include "source/texturedplane.h"
 
 Cuboid* cuboid = nullptr;
 
@@ -157,7 +158,7 @@ int main(int argc, char** argv) {
     glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
 
     // create marker
-    cornerPoint = new Cuboid(glm::vec3(-0.5, -0.75, 1), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    cornerPoint = new Cuboid(glm::vec3(0, 0, 0), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     // camera
     g_camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
@@ -172,9 +173,14 @@ int main(int argc, char** argv) {
     cornerPoint->setShader(shader);
     cuboid->createAxes();
 
+    // texturedPlane
+    TexturedPlane* texturedPlane = new TexturedPlane(1, 1);
+    texturedPlane->setShader(shader);
+
     Scene* scene = new Scene();
     scene->add(cuboid);
     scene->add(cornerPoint);
+    scene->add(texturedPlane);
     
     do {
 
