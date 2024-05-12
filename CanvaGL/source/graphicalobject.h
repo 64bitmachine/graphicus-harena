@@ -14,11 +14,13 @@ class GraphicalObject {
         Shader* shader = nullptr;
         std::vector<GraphicalObject*> children;
         glm::mat4 *projMat, *viewMat, *modelMat;
+        GLuint texture;
 
         GraphicalObject() {
             modelMat = new glm::mat4(1.0f);
             projMat = new glm::mat4(1.0f);
             viewMat = new glm::mat4(1.0f);
+            texture = -1;
         }
 
         void addChild(GraphicalObject* child) {
@@ -28,15 +30,15 @@ class GraphicalObject {
         virtual ~GraphicalObject() {
             glDeleteVertexArrays(1, &VAO);
         }
-        void render() {
+        void render(glm::mat4* projMat, glm::mat4* viewMat) {
             shader->use();
+            shader->setMat4("projection", *projMat);
+            shader->setMat4("view", *viewMat);
             shader->setMat4("model", *modelMat);
             nextFrame();
 
             for(GraphicalObject* child : children) {
-                child->setProjMat(projMat);
-                child->setViewMat(viewMat);
-                child->render();
+                child->render(projMat, viewMat);
             }
         }
 
@@ -50,14 +52,8 @@ class GraphicalObject {
             shader = s;
         }
 
-        void setProjMat(glm::mat4* p) {
-            projMat = p;
-            shader->setMat4("projection", *projMat);
-        }
-
-        void setViewMat(glm::mat4* v) {
-            viewMat = v;
-            shader->setMat4("view", *viewMat);
+        void setTexture(GLuint t) {
+            texture = t;
         }
 };
 

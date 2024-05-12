@@ -32,11 +32,17 @@ class Scene {
             objects.push_back(object);
         }
 
+        /**
+         * Renders all graphical objects in the scene using the provided projection and view matrices.
+         *
+         * @param projection Pointer to the projection matrix for rendering.
+         * @param view Pointer to the view matrix for rendering.
+         *
+         * @throws None
+         */
         void render(glm::mat4* projection, glm::mat4* view) {
             for(GraphicalObject* object : objects) {
-                object->setProjMat(projection);
-                object->setViewMat(view);
-                object->render();
+                object->render(projection, view);
             }
         }
 };

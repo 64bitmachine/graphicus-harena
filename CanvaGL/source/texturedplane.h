@@ -16,11 +16,6 @@ class TexturedPlane : public GraphicalObject {
                 -width / 2.0f, 0.0f, -depth / 2.0f
             };
 
-            // print all the vertices
-            // for (int i = 0; i < 4; i++) {
-            //     std::cout << vertices[i].x << " " << vertices[i].y << " " << vertices[i].z << std::endl;
-            // }
-
             GLuint* indices = new GLuint[6];
             indices[0] = 0;
             indices[1] = 1;
@@ -53,11 +48,19 @@ class TexturedPlane : public GraphicalObject {
             // delete the vertex and index buffers
             delete[] indices;
             vertices.clear();
+
+            assert(glGetError()== GL_NO_ERROR);
         }
 
         void nextFrame() {
             glBindVertexArray(VAO);
+            if(texture != -1) {
+                glBindTexture(GL_TEXTURE_2D, texture);
+                shader->setInt("textureMap", 0);
+            }
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+            if (texture != -1) glBindTexture(GL_TEXTURE_2D, 0);
             glBindVertexArray(0);
         }
 };
