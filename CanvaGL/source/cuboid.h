@@ -85,9 +85,6 @@ public:
     }
 
     void nextFrame() {
-
-        // glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-
         // Bind VAO and draw
         glBindVertexArray(VAO);
         if (wireframe)
@@ -95,8 +92,6 @@ public:
         else 
             glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
         glBindVertexArray(0);
-
-        // glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     }
 
     // Method to calculate vertices based on center, length, breadth, and height

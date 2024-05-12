@@ -30,17 +30,68 @@ bool rescaleCuboidUsingCornerPoint = false;
 bool cuboidMoveMode = false;
 Camera* g_camera;
 
-// initialMouse click marker
-Cuboid* initialCuboid = nullptr;
-glm::vec3 initialCuboidDim = glm::vec3(0.01f, 0.01f, 0.01f);
-
-Cuboid* cornerPoint = nullptr;
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
+
+
+GLuint generateCheckerboardTexture() {
+    GLuint texture;
+    // Checkerboard pattern size
+    const int texWidth = 128;
+    const int texHeight = 128;
+
+    // Generate checkerboard pattern data
+    GLubyte data[texWidth][texHeight];
+    for (int j = 0; j < texWidth; ++j) {
+        for (int i = 0; i < texHeight; ++i) {
+            data[i][j] = (i<=64 && j<=64 || i>64 && j>64 )?255:0;
+        }
+    }
+
+    // Generate texture
+    glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // Set texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // print gl error
+    // std::cout << "GL Error = " << glGetError() << std::endl;
+    assert(glGetError()== GL_NO_ERROR);
+
+    // Set maximum anisotropy setting (optional)
+    GLfloat maxAnisotropy;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+
+    assert(glGetError()== GL_NO_ERROR);
+
+    // Set mipmap base and max level
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
+
+    // Allocate texture object
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, texWidth, texHeight, 0, GL_RED, GL_UNSIGNED_BYTE, data);
+
+    // Generate mipmaps
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    assert(glGetError()== GL_NO_ERROR);
+
+    // Unbind texture
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return texture;
+}
+
 
 glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
     float x,y,z;
@@ -68,7 +119,6 @@ glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int sc
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         g_camera->process_keyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -152,35 +202,40 @@ int main(int argc, char** argv) {
 
     // create program
     Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-    Shader* markerShader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+    Shader* texturedPlaneShader = new Shader("shaders/plane.vs", "shaders/plane.fs");
+
+    assert(glGetError()== GL_NO_ERROR);
+
+
+    GLuint checkerTexture = generateCheckerboardTexture();
 
     cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.5f, 2.0f), 
     glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
 
-    // create marker
-    cornerPoint = new Cuboid(glm::vec3(0, 0, 0), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
     // camera
-    g_camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
+    g_camera = new Camera(glm::vec3(0.0f, 2.0f, 5.0f));
 
     // projection and view matrix
     glm::mat4 projection;
     glm::mat4 view;
 
     float currentFrame;
+    assert(glGetError()== GL_NO_ERROR);
+
 
     cuboid->setShader(shader);
-    cornerPoint->setShader(shader);
     cuboid->createAxes();
 
     // texturedPlane
-    TexturedPlane* texturedPlane = new TexturedPlane(1, 1);
-    texturedPlane->setShader(shader);
+    TexturedPlane* texturedPlane = new TexturedPlane(10, 10);
+    texturedPlane->setShader(texturedPlaneShader);
+    texturedPlane->setTexture(checkerTexture);
 
     Scene* scene = new Scene();
-    scene->add(cuboid);
-    scene->add(cornerPoint);
     scene->add(texturedPlane);
+    scene->add(cuboid);
+    assert(glGetError()== GL_NO_ERROR);
+
     
     do {
 
@@ -190,16 +245,18 @@ int main(int argc, char** argv) {
         lastFrame = currentFrame;
 
         processInput(window);
-
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // projection and view matrix
-        projection = glm::perspective(glm::radians(g_camera->get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
+        projection = glm::perspective(glm::radians(g_camera->get_zoom()),
+         (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
         view = g_camera->get_view_matrix();
         scene->render(&projection, &view);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+        // std::cout << "GL Error = " << glGetError() << std::endl;
     }
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
 
