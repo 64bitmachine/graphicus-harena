@@ -13,8 +13,11 @@
 #include "source/cuboid.h"
 #include "source/scene.h"
 #include "source/texturedplane.h"
+#include "source/grid.h"
 
-Cuboid* cuboid = nullptr;
+float rippleTime = 0.0f;
+//ripple displacement speed
+// const float SPEED = 2;
 
 double mouseX = 0.0, clickReleaseX = 0.0;
 double mouseY = 0.0, clickReleaseY = 0.0;
@@ -201,16 +204,16 @@ int main(int argc, char** argv) {
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
     // create program
-    Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-    Shader* texturedPlaneShader = new Shader("shaders/plane.vs", "shaders/plane.fs");
-
+    // Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+    // Shader* texturedPlaneShader = new Shader("shaders/plane.vs", "shaders/plane.fs");
+    Shader* shader = new Shader("shaders/ripple.vs", "shaders/ripple.fs");
     assert(glGetError()== GL_NO_ERROR);
 
 
-    GLuint checkerTexture = generateCheckerboardTexture();
+    // GLuint checkerTexture = generateCheckerboardTexture();
 
-    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.5f, 2.0f), 
-    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
+    // cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.5f, 2.0f), 
+    // glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
 
     // camera
     g_camera = new Camera(glm::vec3(0.0f, 2.0f, 5.0f));
@@ -223,17 +226,22 @@ int main(int argc, char** argv) {
     assert(glGetError()== GL_NO_ERROR);
 
 
-    cuboid->setShader(shader);
-    cuboid->createAxes();
+    // cuboid->setShader(shader);
+    // cuboid->createAxes();
 
     // texturedPlane
-    TexturedPlane* texturedPlane = new TexturedPlane(10, 10);
-    texturedPlane->setShader(texturedPlaneShader);
-    texturedPlane->setTexture(checkerTexture);
+    // TexturedPlane* texturedPlane = new TexturedPlane(10, 10);
+    // texturedPlane->setShader(texturedPlaneShader);
+    // texturedPlane->setTexture(checkerTexture);
+
+    // Grid
+    Grid* grid = new Grid(10, 10);
+    grid->setShader(shader);
 
     Scene* scene = new Scene();
-    scene->add(texturedPlane);
-    scene->add(cuboid);
+    // scene->add(texturedPlane);
+    // scene->add(cuboid);
+    scene->add(grid);
     assert(glGetError()== GL_NO_ERROR);
 
     
@@ -243,6 +251,9 @@ int main(int argc, char** argv) {
         currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        // get time elapsed
+        shader->setFloat("time", currentFrame * 4.0f);
 
         processInput(window);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
