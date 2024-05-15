@@ -19,6 +19,8 @@ float rippleTime = 0.0f;
 //ripple displacement speed
 // const float SPEED = 2;
 
+Cuboid *cuboid = nullptr;
+
 double mouseX = 0.0, clickReleaseX = 0.0;
 double mouseY = 0.0, clickReleaseY = 0.0;
 bool isMouseClicked = false;
@@ -157,6 +159,30 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     g_camera->process_mouse_scroll(yoffset);
 }
 
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    // mouse left click
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        std::cout << "left click" << std::endl;
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        std::cout << xpos << " " << ypos << std::endl;
+
+        float winZ = 0;
+        glReadPixels(xpos, SCR_HEIGHT - ypos, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
+        std::cout << "z value: " << winZ << std::endl;
+
+        // unproject
+        glm::vec3 objPt = glm::unProject(glm::vec3(xpos, SCR_HEIGHT - ypos, winZ),
+         g_camera->get_view_matrix(), 
+         glm::perspective(glm::radians(g_camera->get_zoom()),(float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f),
+          glm::vec4(0, 0, SCR_WIDTH, SCR_HEIGHT));
+
+        std::cout << "object space: " << objPt.x << " " << objPt.y << " " << objPt.z << std::endl;
+    } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+        std::cout << "left click release" << std::endl;
+    }
+}
+
 
 int main(int argc, char** argv) {
 
@@ -186,8 +212,9 @@ int main(int argc, char** argv) {
 
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
+    // glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
     glewExperimental = true;
     if (glewInit() != GLEW_OK) {
@@ -204,16 +231,16 @@ int main(int argc, char** argv) {
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
     // create program
-    // Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+    Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     // Shader* texturedPlaneShader = new Shader("shaders/plane.vs", "shaders/plane.fs");
-    Shader* shader = new Shader("shaders/ripple.vs", "shaders/ripple.fs");
+    // Shader* rippleShader = new Shader("shaders/ripple.vs", "shaders/ripple.fs");
     assert(glGetError()== GL_NO_ERROR);
 
 
     // GLuint checkerTexture = generateCheckerboardTexture();
 
-    // cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.5f, 2.0f), 
-    // glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
+    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.5f, 2.0f), 
+    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), false);
 
     // camera
     g_camera = new Camera(glm::vec3(0.0f, 2.0f, 5.0f));
@@ -226,7 +253,7 @@ int main(int argc, char** argv) {
     assert(glGetError()== GL_NO_ERROR);
 
 
-    // cuboid->setShader(shader);
+    cuboid->setShader(shader);
     // cuboid->createAxes();
 
     // texturedPlane
@@ -235,13 +262,13 @@ int main(int argc, char** argv) {
     // texturedPlane->setTexture(checkerTexture);
 
     // Grid
-    Grid* grid = new Grid(10, 10);
-    grid->setShader(shader);
+    // Grid* grid = new Grid(10, 10);
+    // grid->setShader(shader);
 
     Scene* scene = new Scene();
     // scene->add(texturedPlane);
-    // scene->add(cuboid);
-    scene->add(grid);
+    scene->add(cuboid);
+    // scene->add(grid);
     assert(glGetError()== GL_NO_ERROR);
 
     
