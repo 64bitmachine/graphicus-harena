@@ -14,10 +14,13 @@
 #include "source/scene.h"
 #include "source/texturedplane.h"
 #include "source/grid.h"
+#include "source/utils.h"
 
 float rippleTime = 0.0f;
 //ripple displacement speed
 // const float SPEED = 2;
+
+Cuboid *cuboid = nullptr;
 
 double mouseX = 0.0, clickReleaseX = 0.0;
 double mouseY = 0.0, clickReleaseY = 0.0;
@@ -39,61 +42,6 @@ const unsigned int SCR_HEIGHT = 600;
 
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
-
-
-GLuint generateCheckerboardTexture() {
-    GLuint texture;
-    // Checkerboard pattern size
-    const int texWidth = 128;
-    const int texHeight = 128;
-
-    // Generate checkerboard pattern data
-    GLubyte data[texWidth][texHeight];
-    for (int j = 0; j < texWidth; ++j) {
-        for (int i = 0; i < texHeight; ++i) {
-            data[i][j] = (i<=64 && j<=64 || i>64 && j>64 )?255:0;
-        }
-    }
-
-    // Generate texture
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    // Set texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    // print gl error
-    // std::cout << "GL Error = " << glGetError() << std::endl;
-    assert(glGetError()== GL_NO_ERROR);
-
-    // Set maximum anisotropy setting (optional)
-    GLfloat maxAnisotropy;
-    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
-
-    assert(glGetError()== GL_NO_ERROR);
-
-    // Set mipmap base and max level
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
-
-    // Allocate texture object
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, texWidth, texHeight, 0, GL_RED, GL_UNSIGNED_BYTE, data);
-
-    // Generate mipmaps
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    assert(glGetError()== GL_NO_ERROR);
-
-    // Unbind texture
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    return texture;
-}
 
 
 glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
@@ -158,6 +106,16 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 }
 
 
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    // mouse left click
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        screenToWorldUsingDepthBuffer(window, SCR_WIDTH, SCR_HEIGHT, g_camera);
+    } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+        std::cout << "left click release" << std::endl;
+    }
+}
+
+
 int main(int argc, char** argv) {
 
     if (!glfwInit()) {
@@ -186,8 +144,9 @@ int main(int argc, char** argv) {
 
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
+    // glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
     glewExperimental = true;
     if (glewInit() != GLEW_OK) {
@@ -204,16 +163,16 @@ int main(int argc, char** argv) {
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
     // create program
-    // Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+    Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     // Shader* texturedPlaneShader = new Shader("shaders/plane.vs", "shaders/plane.fs");
-    Shader* shader = new Shader("shaders/ripple.vs", "shaders/ripple.fs");
+    // Shader* rippleShader = new Shader("shaders/ripple.vs", "shaders/ripple.fs");
     assert(glGetError()== GL_NO_ERROR);
 
 
     // GLuint checkerTexture = generateCheckerboardTexture();
 
-    // cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.5f, 2.0f), 
-    // glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
+    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.5f, 2.0f), 
+    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), false);
 
     // camera
     g_camera = new Camera(glm::vec3(0.0f, 2.0f, 5.0f));
@@ -226,7 +185,7 @@ int main(int argc, char** argv) {
     assert(glGetError()== GL_NO_ERROR);
 
 
-    // cuboid->setShader(shader);
+    cuboid->setShader(shader);
     // cuboid->createAxes();
 
     // texturedPlane
@@ -235,13 +194,13 @@ int main(int argc, char** argv) {
     // texturedPlane->setTexture(checkerTexture);
 
     // Grid
-    Grid* grid = new Grid(10, 10);
-    grid->setShader(shader);
+    // Grid* grid = new Grid(10, 10);
+    // grid->setShader(shader);
 
     Scene* scene = new Scene();
     // scene->add(texturedPlane);
-    // scene->add(cuboid);
-    scene->add(grid);
+    scene->add(cuboid);
+    // scene->add(grid);
     assert(glGetError()== GL_NO_ERROR);
 
     
