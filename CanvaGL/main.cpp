@@ -15,6 +15,7 @@
 #include "source/texturedplane.h"
 #include "source/grid.h"
 #include "source/utils.h"
+#include "source/skybox.h"
 
 float rippleTime = 0.0f;
 //ripple displacement speed
@@ -168,7 +169,7 @@ int main(int argc, char** argv) {
     // Shader* rippleShader = new Shader("shaders/ripple.vs", "shaders/ripple.fs");
     assert(glGetError()== GL_NO_ERROR);
 
-
+    Skybox* skybox = new Skybox();
     // GLuint checkerTexture = generateCheckerboardTexture();
 
     cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.5f, 2.0f), 

@@ -3,9 +3,13 @@
 
 #include <GL/glew.h>
 #include <iostream>
+#include <SOIL.h>
+#include <filesystem>
+#include <vector>
+#include <cstring>
 
 // read shader file
-const char* readShaderSource(const char* filename) {
+static const char* readShaderSource(const char* filename) {
     FILE* fp;
     errno_t err;
 
@@ -39,7 +43,7 @@ const char* readShaderSource(const char* filename) {
 
 
 // create shader
-GLuint createShader(GLenum shaderType, const char* shaderSource) {
+static GLuint createShader(GLenum shaderType, const char* shaderSource) {
     GLuint shader = glCreateShader(shaderType);
     glShaderSource(shader, 1, &shaderSource, NULL);
     glCompileShader(shader);
@@ -60,5 +64,32 @@ GLuint createShader(GLenum shaderType, const char* shaderSource) {
     return shader;
 }
 
+
+static GLubyte* readImage(const char* filename, int& width, int& height, int& channels) {
+    GLubyte* image = SOIL_load_image(filename, &width, &height, &channels, SOIL_LOAD_AUTO);
+    return image;
+}
+
+static std::vector<std::string> getFilenames(const char* foldername) {
+    std::vector<std::string> filenames;
+    std::filesystem::path folderPath(foldername);
+
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator(folderPath)) {
+            if (entry.is_regular_file()) {
+                std::string filenameStr = entry.path().filename().string();
+                // end with .jpg
+                if (filenameStr.find(".jpg") == std::string::npos) continue;
+                // foldername + filename
+                std::string fullFilename = std::string(foldername) + "/" + filenameStr;
+                filenames.push_back(fullFilename);
+            }
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        // Handle errors here
+    }
+
+    return filenames;
+}
 
 #endif // __FILEUTILS_H__
