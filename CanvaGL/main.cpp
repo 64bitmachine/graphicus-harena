@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
 
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    // glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
@@ -157,23 +157,25 @@ int main(int argc, char** argv) {
 
 	// setup opengl options
 	glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
 	// glEnable(GL_BLEND);
 	// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
     // create program
-    Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+    Shader* shader = new Shader("shaders/skybox.vs", "shaders/skybox.fs");
     // Shader* texturedPlaneShader = new Shader("shaders/plane.vs", "shaders/plane.fs");
     // Shader* rippleShader = new Shader("shaders/ripple.vs", "shaders/ripple.fs");
     assert(glGetError()== GL_NO_ERROR);
 
     Skybox* skybox = new Skybox();
     // GLuint checkerTexture = generateCheckerboardTexture();
+    GLuint cubemapTexture = generateCubeMapTexture();
+    assert(glGetError()== GL_NO_ERROR);
 
-    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.5f, 2.0f), 
-    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), false);
+    // cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
+    // glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), false);
 
     // camera
     g_camera = new Camera(glm::vec3(0.0f, 2.0f, 5.0f));
@@ -186,8 +188,10 @@ int main(int argc, char** argv) {
     assert(glGetError()== GL_NO_ERROR);
 
 
-    cuboid->setShader(shader);
+    // cuboid->setShader(shader);
     // cuboid->createAxes();
+    skybox->setShader(shader);
+    skybox->setTexture(cubemapTexture);
 
     // texturedPlane
     // TexturedPlane* texturedPlane = new TexturedPlane(10, 10);
@@ -200,7 +204,7 @@ int main(int argc, char** argv) {
 
     Scene* scene = new Scene();
     // scene->add(texturedPlane);
-    scene->add(cuboid);
+    scene->add(skybox);
     // scene->add(grid);
     assert(glGetError()== GL_NO_ERROR);
 
@@ -216,12 +220,12 @@ int main(int argc, char** argv) {
         shader->setFloat("time", currentFrame * 4.0f);
 
         processInput(window);
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // projection and view matrix
         projection = glm::perspective(glm::radians(g_camera->get_zoom()),
-         (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
+         (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         view = g_camera->get_view_matrix();
         scene->render(&projection, &view);
 

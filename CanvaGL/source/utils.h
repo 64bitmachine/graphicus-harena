@@ -7,12 +7,12 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include "fileutils.h"
 #include "camera.h"
 
 
 
-void screenToWorldUsingDepthBuffer(GLFWwindow* window, int SCR_WIDTH, int SCR_HEIGHT, Camera* g_camera) {
+static void screenToWorldUsingDepthBuffer(GLFWwindow* window, int SCR_WIDTH, int SCR_HEIGHT, Camera* g_camera) {
     std::cout << "left click" << std::endl;
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
@@ -31,7 +31,7 @@ void screenToWorldUsingDepthBuffer(GLFWwindow* window, int SCR_WIDTH, int SCR_HE
     std::cout << "object space: " << objPt.x << " " << objPt.y << " " << objPt.z << std::endl;
 }
 
-GLuint generateCheckerboardTexture() {
+static GLuint generateCheckerboardTexture() {
     GLuint texture;
     // Checkerboard pattern size
     const int texWidth = 128;
@@ -81,6 +81,60 @@ GLuint generateCheckerboardTexture() {
 
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    return texture;
+}
+
+static GLuint generateCubeMapTexture() {
+    GLuint texture;
+
+    int textureWidths[6], textureHeights[6], channels[6];
+    GLubyte* imageData[6];
+    std::cout << "Loading skybox Images..." << std::endl;
+    char const* folder = "/Users/rathod_ias/Downloads/field-skyboxes/FishPond";
+    // std::vector<std::string> files = getFilenames(folder);
+    std::vector<std::string> files = {
+                            std::string(folder) + "/posx.jpg",
+                            std::string(folder) + "/negx.jpg", 
+                            std::string(folder) + "/posy.jpg", 
+                            std::string(folder) + "/negy.jpg", 
+                            std::string(folder) + "/posz.jpg", 
+                            std::string(folder) + "/negz.jpg"};
+
+    for (int i = 0; i < 6; i++) {
+        std::cout << "Loading " << files[i] << std::endl;
+        imageData[i] = readImage(files[i].c_str(), textureWidths[i], textureHeights[i], channels[i]);
+        if (imageData[i] == NULL) {
+            std::cout << "Failed to load image" << std::endl;
+        }
+        else {
+            std::cout << "Loaded image" << std::endl;
+        }
+    }
+
+    glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+
+    // parameters
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    GLint format = channels[0] == 4 ? GL_RGBA : GL_RGB;
+
+    for (int i = 0; i < 6; i++) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 
+            format, textureWidths[i], textureHeights[i], 0, format, GL_UNSIGNED_BYTE, imageData[i]);
+
+        if (imageData[i] != NULL) {
+            // glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+            delete[] imageData[i];
+        }
+    }
+    assert(glGetError()== GL_NO_ERROR);
 
     return texture;
 }
