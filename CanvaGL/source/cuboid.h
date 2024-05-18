@@ -35,7 +35,6 @@ private:
     glm::vec3 rotationAngles = glm::vec3(0.0f, 0.0f, 0.0f);
 
     GLuint VBO;
-    std::vector<GLfloat> vertices;
 
     #define FRONT_BOTTOM_LEFT center - ((upVector * height + rightVector * breadth + NORM_CROSS(upVector, rightVector) * length) / 2.0f)
     #define FRONT_BOTTOM_RIGHT center - ((upVector * height - rightVector * breadth + NORM_CROSS(upVector, rightVector) * length) / 2.0f)
@@ -47,6 +46,7 @@ private:
     #define BACK_TOP_LEFT center + ((upVector * height - rightVector * breadth + NORM_CROSS(upVector, rightVector) * length) / 2.0f)
 
 public:
+    std::vector<GLfloat> vertices;
     Cuboid(glm::vec3 center, glm::vec3 dims, glm::vec3 upVector, glm::vec3 rightVector, bool wireframe = false) :
         center(center), length(dims.x), breadth(dims.y), height(dims.z), upVector(upVector), rightVector(rightVector), wireframe(wireframe) {
         
@@ -114,47 +114,47 @@ public:
         // Push vertices into vector
         vertices = {
             // Front face
-            frontBottomLeft.x, frontBottomLeft.y, frontBottomLeft.z,
-            frontBottomRight.x, frontBottomRight.y, frontBottomRight.z,
-            frontTopRight.x, frontTopRight.y, frontTopRight.z,
-            frontBottomLeft.x, frontBottomLeft.y, frontBottomLeft.z,
-            frontTopRight.x, frontTopRight.y, frontTopRight.z,
             frontTopLeft.x, frontTopLeft.y, frontTopLeft.z,
+            frontTopRight.x, frontTopRight.y, frontTopRight.z,
+            frontBottomLeft.x, frontBottomLeft.y, frontBottomLeft.z,
+            frontTopRight.x, frontTopRight.y, frontTopRight.z,
+            frontBottomRight.x, frontBottomRight.y, frontBottomRight.z,
+            frontBottomLeft.x, frontBottomLeft.y, frontBottomLeft.z,
             // Right face
-            frontBottomRight.x, frontBottomRight.y, frontBottomRight.z,
-            backBottomRight.x, backBottomRight.y, backBottomRight.z,
-            backTopRight.x, backTopRight.y, backTopRight.z,
-            frontBottomRight.x, frontBottomRight.y, frontBottomRight.z,
-            backTopRight.x, backTopRight.y, backTopRight.z,
             frontTopRight.x, frontTopRight.y, frontTopRight.z,
+            backTopRight.x, backTopRight.y, backTopRight.z,
+            frontBottomRight.x, frontBottomRight.y, frontBottomRight.z,
+            backTopRight.x, backTopRight.y, backTopRight.z,
+            backBottomRight.x, backBottomRight.y, backBottomRight.z,
+            frontBottomRight.x, frontBottomRight.y, frontBottomRight.z,
             // Back face
-            backBottomRight.x, backBottomRight.y, backBottomRight.z,
-            backBottomLeft.x, backBottomLeft.y, backBottomLeft.z,
-            backTopLeft.x, backTopLeft.y, backTopLeft.z,
-            backBottomRight.x, backBottomRight.y, backBottomRight.z,
-            backTopLeft.x, backTopLeft.y, backTopLeft.z,
             backTopRight.x, backTopRight.y, backTopRight.z,
+            backTopLeft.x, backTopLeft.y, backTopLeft.z,
+            backBottomRight.x, backBottomRight.y, backBottomRight.z,
+            backTopLeft.x, backTopLeft.y, backTopLeft.z,
+            backBottomLeft.x, backBottomLeft.y, backBottomLeft.z,
+            backBottomRight.x, backBottomRight.y, backBottomRight.z,
             // Left face
-            backBottomLeft.x, backBottomLeft.y, backBottomLeft.z,
-            frontBottomLeft.x, frontBottomLeft.y, frontBottomLeft.z,
-            frontTopLeft.x, frontTopLeft.y, frontTopLeft.z,
-            backBottomLeft.x, backBottomLeft.y, backBottomLeft.z,
-            frontTopLeft.x, frontTopLeft.y, frontTopLeft.z,
             backTopLeft.x, backTopLeft.y, backTopLeft.z,
+            frontTopLeft.x, frontTopLeft.y, frontTopLeft.z,
+            backBottomLeft.x, backBottomLeft.y, backBottomLeft.z,
+            frontTopLeft.x, frontTopLeft.y, frontTopLeft.z,
+            frontBottomLeft.x, frontBottomLeft.y, frontBottomLeft.z,
+            backBottomLeft.x, backBottomLeft.y, backBottomLeft.z,
             // Top face
-            frontTopLeft.x, frontTopLeft.y, frontTopLeft.z,
-            frontTopRight.x, frontTopRight.y, frontTopRight.z,
-            backTopRight.x, backTopRight.y, backTopRight.z,
-            frontTopLeft.x, frontTopLeft.y, frontTopLeft.z,
-            backTopRight.x, backTopRight.y, backTopRight.z,
             backTopLeft.x, backTopLeft.y, backTopLeft.z,
+            frontTopRight.x, frontTopRight.y, frontTopRight.z,
+            frontTopLeft.x, frontTopLeft.y, frontTopLeft.z,
+            backTopLeft.x, backTopLeft.y, backTopLeft.z,
+            backTopRight.x, backTopRight.y, backTopRight.z,
+            frontTopRight.x, frontTopRight.y, frontTopRight.z,
             // Bottom face
-            frontBottomLeft.x, frontBottomLeft.y, frontBottomLeft.z,
             backBottomLeft.x, backBottomLeft.y, backBottomLeft.z,
-            backBottomRight.x, backBottomRight.y, backBottomRight.z,
             frontBottomLeft.x, frontBottomLeft.y, frontBottomLeft.z,
+            frontBottomRight.x, frontBottomRight.y, frontBottomRight.z,
+            frontBottomRight.x, frontBottomRight.y, frontBottomRight.z,
             backBottomRight.x, backBottomRight.y, backBottomRight.z,
-            frontBottomRight.x, frontBottomRight.y, frontBottomRight.z
+            backBottomLeft.x, backBottomLeft.y, backBottomLeft.z
         };
 
         // print vertices computed

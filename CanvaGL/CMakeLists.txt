@@ -9,10 +9,13 @@ LANGUAGES CXX)
 # cmake type 
 set(CMAKE_BUILD_TYPE Debug)
 
-set (CMAKE_CXX_STANDARD 11)
+# set (CMAKE_CXX_STANDARD 11)
 
 include(CTest)
 enable_testing()
+
+# use c++17
+set(CMAKE_CXX_STANDARD 17)
 
 # opengl
 find_package(OpenGL REQUIRED)
@@ -36,6 +39,9 @@ include_directories(${GLFW_INCLUDE_DIRS})
 find_package(glm REQUIRED)
 include_directories(${GLM_INCLUDE_DIRS})
 
+# /opt/local/include/SOIL include
+include_directories("/opt/local/include/SOIL")
+link_directories("/opt/local/lib")
 
 add_executable(HelloWorld 
 main.cpp
@@ -47,7 +53,7 @@ file(COPY shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 if (APPLE)
     message("APPLE : Build for MacOS")
-    target_link_libraries(HelloWorld glfw GLEW::GLEW "-framework OpenGL")
+    target_link_libraries(HelloWorld glfw GLEW::GLEW "-framework OpenGL" "/opt/local/lib/libSOIL.dylib")
 else()
     message("LINUX : Build for Linux")
     target_link_libraries(HelloWorld ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLFW_LIBRARIES} ${GLM_LIBRARIES} glfw)
