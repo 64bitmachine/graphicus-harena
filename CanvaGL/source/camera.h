@@ -20,7 +20,7 @@ enum Cam_Movement {
 const float YAW         = -90.0f;
 // pitch indicates the rotation around the x-axis(lateral)
 const float PITCH       =  0.0f;
-const float SPEED       =  52.5f;
+const float SPEED       =  2.5f;
 const float SENSITIVITY =  0.1f;
 const float ZOOM        =  45.0f;
 
