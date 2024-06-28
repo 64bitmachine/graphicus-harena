@@ -402,7 +402,7 @@ public:
     /**
      * @brief 
      * 
-     * @param rotateMode 0 - Up, 1 - Right, 3 - Right x Up
+     * @param rotateMode 0 - Up, 1 - Right, 2 - Right x Up
      */
     void rotate(int rotateMode) {
         // std::cout << "Rotate Up" << std::endl;
@@ -420,6 +420,10 @@ public:
             rotationAngles += glm::vec3(0.0f, 0.0f, 0.1f);
         }
 
+        applyRotationMatrix(rotationMatrix);
+    }
+
+    void applyRotationMatrix(glm::mat4 &rotationMatrix) {
         // Rotate right vector and forward vector using rotation matrix
         glm::vec4 newRightVec = rotationMatrix * glm::vec4(rightVector, 1.0f);
         rightVector = glm::normalize(glm::vec3(newRightVec.x, newRightVec.y, newRightVec.z));
@@ -437,14 +441,10 @@ public:
         *modelMat = translateBack * rotationMatrix * translateToCenter * (*modelMat);
         *originalModelMat = *modelMat;
 
-        for (GraphicalObject* child : children) {
+        for (GraphicalObject *child : children)
+        {
             *child->modelMat = translateBack * rotationMatrix * translateToCenter * (*child->modelMat);
         }
-
-        // children.clear();
-
-        // calculateEdges(center, upVector, rightVector, length, breadth, height);
-        printCuboidState();
     }
 
     void createAxes() {
@@ -658,5 +658,33 @@ public:
 
         *modelMat = rotX * rotY * rotZ;
         *originalModelMat = *modelMat;
+    }
+
+    void getRelativeOrientation(const Cuboid *otherCuboid) {
+        // find the cross product of this.upVec and otherCuboid.upVec
+        glm::vec3 crossProduct = glm::normalize(glm::cross(upVector, otherCuboid->upVector));
+        
+        // print crossProduct
+        PRINT_VEC(crossProduct);
+
+        // find angle difference between upVec and other.upVec
+        float angle = glm::acos(glm::dot(upVector, otherCuboid->upVector));
+
+        std::cout << "angle: " << glm::degrees(angle) << " degrees" << std::endl;
+
+        glm::mat4 rotX = glm::rotate(glm::mat4(1.0f), angle, crossProduct);
+        applyRotationMatrix(rotX);
+
+        glm::vec3 ppo = this->center - otherCuboid->center;
+        float scaleVec = glm::dot(ppo, otherCuboid->upVector);
+
+        std::cout << "scaleVec: " << scaleVec << std::endl;
+
+        glm::vec3 scaledDir = otherCuboid->upVector * scaleVec;
+        glm::vec3 distanceVec = ppo - scaledDir;
+
+        std::cout << "distanceVec: " << glm::length(distanceVec) << std::endl;
+
+        move(-distanceVec, true);
     }
 };
