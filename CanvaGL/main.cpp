@@ -16,13 +16,15 @@
 #include "source/grid.h"
 #include "source/utils.h"
 #include "source/skybox.h"
+#include "source/2d/Rectangle.h"
 
 float rippleTime = 0.0f;
 //ripple displacement speed
 // const float SPEED = 2;
 
-Cuboid *cuboid = nullptr;
-Cuboid *cuboid2 = nullptr;
+Rectangle* rectangle = nullptr;
+// Cuboid *cuboid = nullptr;
+// Cuboid *cuboid2 = nullptr;
 
 double mouseX = 0.0, clickReleaseX = 0.0;
 double mouseY = 0.0, clickReleaseY = 0.0;
@@ -82,10 +84,10 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         g_camera->process_keyboard(RIGHT, deltaTime);
 
-    if (test == false && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
-        test = true;
-        cuboid2->getRelativeOrientation(cuboid);
-    }
+    // if (test == false && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+    //     test = true;
+    //     cuboid2->getRelativeOrientation(cuboid);
+    // }
 
     if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
         test = false;
@@ -186,12 +188,15 @@ int main(int argc, char** argv) {
     // GLuint cubemapTexture = generateCubeMapTexture();
     assert(glGetError()== GL_NO_ERROR);
 
-    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
-    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
+    // cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
+    // glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
 
 
-    cuboid2  = new Cuboid(glm::vec3(-1.5f, -3.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
-    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
+    // cuboid2  = new Cuboid(glm::vec3(-1.5f, -3.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
+    // glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
+
+    rectangle = new Rectangle(1.0f, 1.0f);
+    assert(glGetError()== GL_NO_ERROR);
 
     // camera
     g_camera = new Camera(glm::vec3(0.0f, 2.0f, 5.0f));
@@ -204,12 +209,13 @@ int main(int argc, char** argv) {
     assert(glGetError()== GL_NO_ERROR);
 
 
-    cuboid->setShader(shader);
-    cuboid->createAxes();
-    cuboid2->setShader(shader);
-    cuboid2->createAxes();
+    // cuboid->setShader(shader);
+    // cuboid->createAxes();
+    // cuboid2->setShader(shader);
+    // cuboid2->createAxes();
     // skybox->setShader(shader);
     // skybox->setTexture(cubemapTexture);
+    rectangle->setShader(shader);
 
     // texturedPlane
     // TexturedPlane* texturedPlane = new TexturedPlane(10, 10);
@@ -224,12 +230,13 @@ int main(int argc, char** argv) {
     // scene->add(texturedPlane);
     // scene->add(skybox);
     // scene->add(grid);
-    scene->add(cuboid);
-    scene->add(cuboid2);
+    // scene->add(cuboid);
+    // scene->add(cuboid2);
+    scene->add(rectangle);
     assert(glGetError()== GL_NO_ERROR);
 
-    for(int i = 0; i < 50; i++) cuboid2->rotate(2);
-    for(int i = 0; i < 20; i++) cuboid2->rotate(1);
+    // for(int i = 0; i < 50; i++) cuboid2->rotate(2);
+    // for(int i = 0; i < 20; i++) cuboid2->rotate(1);
     
     do {
 
