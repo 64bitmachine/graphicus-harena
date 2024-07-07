@@ -6,7 +6,7 @@
 
 class Rectangle : public GraphicalObject {
     float width, height;
-    glm::vec3 normal;
+    glm::vec3 normal, position;
 public:
     Rectangle(float w, float h) : width(w), height(h) {
         name = "rectangle";
@@ -62,6 +62,18 @@ public:
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
+
+    void setNormal(glm::vec3 n) { normal = n; }
+
+    glm::vec3 getNormal() { return normal; }
+
+    void setPosition(glm::vec3 p) { 
+        position = p;
+
+        *modelMat = glm::translate(glm::mat4(1.0f), position);
+    }
+
+    glm::vec3 getPosition() { return position; }
 };
 
 #endif // RECTANGLE_H
