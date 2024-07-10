@@ -15,18 +15,23 @@ protected:
 };
 
 TEST_F(ObjReaderTest, TestReadValidFile) {
-    std::string validFilePath = "path/to/valid/file.obj";
+    std::string validFilePath = "resources/valid.obj";
     ASSERT_TRUE(reader.loadModel(validFilePath));
 }
 
 TEST_F(ObjReaderTest, TestReadInvalidFile) {
-    std::string invalidFilePath = "path/to/invalid/file.obj";
+    std::string invalidFilePath = "resources/invalid.obj";
     ASSERT_FALSE(reader.loadModel(invalidFilePath));
 }
 
 TEST_F(ObjReaderTest, TestReadEmptyFile) {
-    std::string emptyFilePath = "path/to/empty/file.obj";
-    ASSERT_FALSE(reader.loadModel(emptyFilePath));
+    std::string emptyFilePath = "resources/empty.obj";
+    ASSERT_TRUE(reader.loadModel(emptyFilePath));
+}
+
+TEST_F(ObjReaderTest, TestReadTeapot) {
+    std::string teapotFilePath = "resources/teapot.obj";
+    ASSERT_TRUE(reader.loadModel(teapotFilePath));
 }
 
 int main(int argc, char **argv) {
