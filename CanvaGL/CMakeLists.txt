@@ -82,10 +82,19 @@ add_executable(
   test/unit/sample.cpp
   test/unit/objreadertest.cpp
 )
-target_link_libraries(
-  sample_test
-  GTest::gtest_main
-)
+# target_link_libraries(
+#   sample_test
+#   GTest::gtest_main
+#   ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} "-framework OpenGL"}
+# )
+
+if (APPLE)
+    message("APPLE : Build for MacOS")
+    target_link_libraries(sample_test -g GTest::gtest_main glfw GLEW::GLEW "-framework OpenGL" "/opt/local/lib/libSOIL.dylib")
+else()
+    message("LINUX : Build for Linux")
+    target_link_libraries(sample_test GTest::gtest_main ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLFW_LIBRARIES} ${GLM_LIBRARIES} glfw)
+endif()
 
 include(GoogleTest)
 gtest_discover_tests(sample_test)

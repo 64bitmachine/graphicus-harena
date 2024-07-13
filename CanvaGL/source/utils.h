@@ -139,4 +139,24 @@ static GLuint generateCubeMapTexture() {
     return texture;
 }
 
+static void initCanvaGL() {
+    if (!glfwInit()) {
+        std::cout << "Failed to initialize GLFW" << std::endl;
+        // exit
+        exit(-1);
+    }
+
+    // mac os x
+    #ifdef __UNIX__
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    #elif __APPLE__
+            // Define version and compatibility settings
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+        glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    #endif
+}
+
 #endif

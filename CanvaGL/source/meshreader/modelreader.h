@@ -1,12 +1,22 @@
+#ifndef MODELREADER_H
+#define MODELREADER_H
+
 #include <iostream>
 #include <vector>
 #include <GL/glew.h>
+#include "modelgraphicalobject.h"
 
 class ModelReader {
 public:
     std::vector<GLfloat>* vertices = nullptr;
     std::vector<GLuint>* indices = nullptr;
-    virtual bool loadModel(const std::string& filePath) = 0;
+    virtual std::unique_ptr<GraphicalObject> loadModel() = 0;
+    virtual void initModelGO() = 0;
+    std::unique_ptr<GraphicalObject> modelGO = nullptr;
+    std::string filePath;
+
+    ModelReader(std::string filePath): filePath(filePath) {}
+
     virtual ~ModelReader() {
         // Clean up
         if (vertices != nullptr) {
@@ -15,7 +25,7 @@ public:
             delete vertices;
             delete indices;
         }
-        // log
-        std::cout << "ModelReader destroyed" << std::endl;
     }
 };
+
+#endif

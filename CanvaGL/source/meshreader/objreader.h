@@ -3,14 +3,12 @@
 
 class OBJModelReader : public ModelReader {
 public:
-    bool loadModel(const std::string& filePath) override {
+    std::unique_ptr<GraphicalObject> loadModel() override {
         std::ifstream file(filePath);
         if (!file.is_open()) {
             std::cerr << "Failed to open file: " << filePath << std::endl;
-            return false;
+            return nullptr;
         }
-
-        std::cout << "Loading OBJ file: " << filePath << std::endl;
 
         vertices = new std::vector<GLfloat>;
         indices = new std::vector<GLuint>;
@@ -19,16 +17,57 @@ public:
         while (std::getline(file, line)) {
             if (!processLine(line)) {
                 std::cerr << "Failed to process line: " << line << std::endl;
-                return false;
+                return nullptr;
             }
         }
 
-        return true;
+        file.close();
+
+        initModelGO();
+        return std::move(modelGO);
+    }
+
+    OBJModelReader(std::string filePath): ModelReader(filePath) {
     }
 
     virtual ~OBJModelReader() {
-        // log
-        std::cout << "OBJModelReader destroyed" << std::endl;
+    }
+
+    virtual void initModelGO() override {
+        ModelGraphicalObject* tempModelGO = new ModelGraphicalObject();
+
+        // Create VAO
+        glGenVertexArrays(1, &tempModelGO->VAO);
+        GLuint VBO, EBO;
+        glGenBuffers(1, &EBO);
+        glGenBuffers(1, &VBO);
+
+        // Bind VAO
+        glBindVertexArray(tempModelGO->VAO);
+
+        // Bind VBO and upload vertex data
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, vertices->size() * sizeof(GLfloat), vertices->data(), GL_STATIC_DRAW);
+        std::cout << "vertex size: " << vertices->size() << std::endl;
+
+        // Bind EBO and upload index data
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices->size() * sizeof(GLuint), indices->data(), GL_STATIC_DRAW);
+        std::cout << "index size: " << indices->size() << std::endl;
+
+        // Specify vertex attributes
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        // Unbind VAO
+        glBindVertexArray(0);
+
+        // clear
+        vertices->clear();
+        tempModelGO->indexCount = indices->size();
+        indices->clear();
+
+        modelGO = std::unique_ptr<ModelGraphicalObject>(tempModelGO);
     }
 
 private:
