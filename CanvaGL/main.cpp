@@ -17,6 +17,8 @@
 #include "source/utils.h"
 #include "source/skybox.h"
 #include "source/2d/Rectangle.h"
+#include "meshreader/modelreader.h"
+#include "meshreader/modelreaderfactory.h"
 
 float rippleTime = 0.0f;
 //ripple displacement speed
@@ -181,22 +183,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
 int main(int argc, char** argv) {
 
-    if (!glfwInit()) {
-        std::cout << "Failed to initialize GLFW" << std::endl;
-        return -1;
-    }
-
-    // mac os x
-    #ifdef __UNIX__
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    #elif __APPLE__
-            // Define version and compatibility settings
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-        glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    #endif
+    initCanvaGL();
 
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Hello World", NULL, NULL);
     if (window == NULL) {
@@ -241,6 +228,9 @@ int main(int argc, char** argv) {
     cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
     glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), false);
 
+    auto modelReader = ModelReaderFactory::createModelReader("resources/teapot.obj");
+    auto teapot = modelReader->loadModel();
+    assert(glGetError()== GL_NO_ERROR);
 
     // cuboid2  = new Cuboid(glm::vec3(-1.5f, -3.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
     // glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
@@ -265,6 +255,7 @@ int main(int argc, char** argv) {
 
 
     cuboid->setShader(shader);
+    teapot->setShader(shader);
     // cuboid->createAxes();
     // cuboid2->setShader(shader);
     // cuboid2->createAxes();
@@ -286,6 +277,7 @@ int main(int argc, char** argv) {
     // scene->add(skybox);
     // scene->add(grid);
     scene->add(cuboid);
+    scene->add(teapot.get());
     // scene->add(cuboid2);
     // scene->add(rectangle);
     assert(glGetError()== GL_NO_ERROR);
@@ -313,45 +305,45 @@ int main(int argc, char** argv) {
         view = g_camera->get_view_matrix();
         scene->render(&projection, &view);
 
-        // ============== Mirror code =========================
-        //store the current modelview matrix
-        glm::mat4 MV = view * (*cuboid->modelMat);
-        glm::mat4 oldMV = MV;
+        // // ============== Mirror code =========================
+        // //store the current modelview matrix
+        // glm::mat4 MV = view * (*cuboid->modelMat);
+        // glm::mat4 oldMV = MV;
 
-        //now change the view matrix to where the mirror is
-        //reflect the view vector in the mirror normal direction
-        glm::vec3 V = glm::vec3(-MV[2][0], -MV[2][1], -MV[2][2]);
-        glm::vec3 R = glm::reflect(V, rectangle->getNormal());
+        // //now change the view matrix to where the mirror is
+        // //reflect the view vector in the mirror normal direction
+        // glm::vec3 V = glm::vec3(-MV[2][0], -MV[2][1], -MV[2][2]);
+        // glm::vec3 R = glm::reflect(V, rectangle->getNormal());
 
-        //place the virtual camera at the mirro position
-        MV = glm::lookAt(rectangle->getPosition(), rectangle->getPosition() + R, glm::vec3(0,1,0));
+        // //place the virtual camera at the mirro position
+        // MV = glm::lookAt(rectangle->getPosition(), rectangle->getPosition() + R, glm::vec3(0,1,0));
 
-        //since mirror image is laterally inverted, we multiply the MV matrix by (-1,1,1)
-        MV = glm::scale(MV, glm::vec3(-1,1,1));
+        // //since mirror image is laterally inverted, we multiply the MV matrix by (-1,1,1)
+        // MV = glm::scale(MV, glm::vec3(-1,1,1));
 
-        //enable FBO 
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
-        //render to colour attachment 0
-        glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        //clear the colour and depth buffers
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-        //show the mirror from the front side only
-        if(glm::dot(V, rectangle->getNormal()) < 0) {
-            cuboid->render(&projection, &view);
-        } 
+        // //enable FBO 
+        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
+        // //render to colour attachment 0
+        // glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        // //clear the colour and depth buffers
+        // glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        // //show the mirror from the front side only
+        // if(glm::dot(V, rectangle->getNormal()) < 0) {
+        //     cuboid->render(&projection, &view);
+        // } 
         
-        //unbind the FBO
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        // //unbind the FBO
+        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         
-        //restore the default back buffer 
-        glDrawBuffer(GL_BACK_LEFT);
+        // //restore the default back buffer 
+        // glDrawBuffer(GL_BACK_LEFT);
 
-        //bind the FBO output at the current texture 
-        glBindTexture(GL_TEXTURE_2D, renderTextureID);
+        // //bind the FBO output at the current texture 
+        // glBindTexture(GL_TEXTURE_2D, renderTextureID);
 
-        //render mirror
-        rectangle->render(&projection, &view);
-        // ====================================================
+        // //render mirror
+        // rectangle->render(&projection, &view);
+        // // ====================================================
 
         glfwSwapBuffers(window);
         glfwPollEvents();

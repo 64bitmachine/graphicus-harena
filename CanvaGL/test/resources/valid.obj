@@ -1,0 +1,9 @@
+# Simple .obj file with 3 vertices and 1 face
+
+# List of vertices
+v 0.0 0.0 0.0
+v 1.0 0.0 0.0
+v 0.0 1.0 0.0
+
+# List of faces
+f 1 2 3
