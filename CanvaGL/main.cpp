@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
     // create program
     // Shader* shader = new Shader("shaders/skybox.vs", "shaders/skybox.fs");
     Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-    Shader* mirrorShader = new Shader("shaders/mirror.vs", "shaders/mirror.fs");
+    // Shader* mirrorShader = new Shader("shaders/mirror.vs", "shaders/mirror.fs");
     // Shader* texturedPlaneShader = new Shader("shaders/plane.vs", "shaders/plane.fs");
     // Shader* rippleShader = new Shader("shaders/ripple.vs", "shaders/ripple.fs");
     assert(glGetError()== GL_NO_ERROR);
@@ -225,18 +225,18 @@ int main(int argc, char** argv) {
     // GLuint cubemapTexture = generateCubeMapTexture();
     assert(glGetError()== GL_NO_ERROR);
 
-    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
-    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), false);
+    cuboid = new Cuboid(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(2.0f, 2.0f, 2.0f), 
+    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
 
-    auto modelReader = ModelReaderFactory::createModelReader("resources/teapot.obj");
-    auto teapot = modelReader->loadModel();
+    // auto modelReader = ModelReaderFactory::createModelReader("resources/teapot.obj");
+    // auto teapot = modelReader->loadModel();
     assert(glGetError()== GL_NO_ERROR);
 
     // cuboid2  = new Cuboid(glm::vec3(-1.5f, -3.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
     // glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
 
-    rectangle = new Rectangle(1.0f, 1.0f);
-    rectangle->setPosition(glm::vec3(0.0f, 0.0f, -2.0f));
+    rectangle = new Rectangle(4.0f, 2.0f);
+    rectangle->setPosition(glm::vec3(6.0f, 6.0f, 6.0f));
     rectangle->setNormal(glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f)));
     assert(glGetError()== GL_NO_ERROR);
 
@@ -255,13 +255,13 @@ int main(int argc, char** argv) {
 
 
     cuboid->setShader(shader);
-    teapot->setShader(shader);
+    // teapot->setShader(shader);
     // cuboid->createAxes();
     // cuboid2->setShader(shader);
     // cuboid2->createAxes();
     // skybox->setShader(shader);
     // skybox->setTexture(cubemapTexture);
-    rectangle->setShader(mirrorShader);
+    rectangle->setShader(shader);
 
     // texturedPlane
     // TexturedPlane* texturedPlane = new TexturedPlane(10, 10);
@@ -277,9 +277,9 @@ int main(int argc, char** argv) {
     // scene->add(skybox);
     // scene->add(grid);
     scene->add(cuboid);
-    scene->add(teapot.get());
+    // scene->add(teapot.get());
     // scene->add(cuboid2);
-    // scene->add(rectangle);
+    scene->add(rectangle);
     assert(glGetError()== GL_NO_ERROR);
 
     // for(int i = 0; i < 50; i++) cuboid2->rotate(2);

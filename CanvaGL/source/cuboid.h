@@ -3,9 +3,17 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
-
+#include "shader.h"
 #include "line.h"
 #include "graphicalobject.h"
+#include "2d/Rectangle.h"
+
+struct IntersectionPoint {
+    glm::vec3 point;
+    bool isValid;
+
+    IntersectionPoint(glm::vec3 p, bool v) : point(p), isValid(v) {}
+};
 
 // macro to get normalized cross
 #define NORM_CROSS(a, b) glm::normalize(glm::cross(a, b))
@@ -686,5 +694,94 @@ public:
         std::cout << "distanceVec: " << glm::length(distanceVec) << std::endl;
 
         move(-distanceVec, true);
+    }
+
+    std::vector<glm::vec3> getAllCorners() {
+        std::vector<glm::vec3> corners;
+
+        corners.push_back(FRONT_BOTTOM_LEFT);
+        corners.push_back(FRONT_BOTTOM_RIGHT);
+        corners.push_back(FRONT_TOP_RIGHT);
+        corners.push_back(FRONT_TOP_LEFT);
+        corners.push_back(BACK_BOTTOM_LEFT);
+        corners.push_back(BACK_BOTTOM_RIGHT);
+        corners.push_back(BACK_TOP_RIGHT);
+        corners.push_back(BACK_TOP_LEFT);
+
+        return corners;
+    }
+
+    std::vector<std::pair<glm::vec3, glm::vec3>> getAllEdges() {
+        std::vector<std::pair<glm::vec3, glm::vec3>> edges;
+        std::vector<glm::vec3> corners = getAllCorners();
+
+        // Front face
+        edges.push_back(std::make_pair(corners[0], corners[1]));
+        edges.push_back(std::make_pair(corners[1], corners[2]));
+        edges.push_back(std::make_pair(corners[2], corners[3]));
+        edges.push_back(std::make_pair(corners[3], corners[0]));
+
+        // Back face
+        edges.push_back(std::make_pair(corners[4], corners[5]));
+        edges.push_back(std::make_pair(corners[5], corners[6]));
+        edges.push_back(std::make_pair(corners[6], corners[7]));
+        edges.push_back(std::make_pair(corners[7], corners[4]));
+
+        // Connecting edges
+        edges.push_back(std::make_pair(corners[0], corners[4]));
+        edges.push_back(std::make_pair(corners[1], corners[5]));
+        edges.push_back(std::make_pair(corners[2], corners[6]));
+        edges.push_back(std::make_pair(corners[3], corners[7]));
+
+        return edges;
+    }
+
+    std::vector<glm::vec3> cuboidPlaneIntersection(Rectangle rectangle) {
+        std::vector<glm::vec3> intersectionPoints;
+
+        // Get the plane's normal vector and position
+        glm::vec3 planeNormal = rectangle.getNormal();
+        glm::vec3 planePosition = rectangle.getPosition();
+
+        // Get the cuboid's edges
+        std::vector<std::pair<glm::vec3, glm::vec3>> edges = this->getAllEdges();
+
+        // Check each edge for intersection with the plane
+        for (auto& edge : edges) {
+            IntersectionPoint intersectionPoint = getIntersectionPoint(edge.first, edge.second, planeNormal, planePosition);
+            if (intersectionPoint.isValid && isPointWithinEdgeBounds(intersectionPoint.point, edge.first, edge.second)) {
+                intersectionPoints.push_back(intersectionPoint.point);
+            }
+        }
+
+        return intersectionPoints;
+    }
+
+    IntersectionPoint getIntersectionPoint(glm::vec3 lineStart, glm::vec3 lineEnd, glm::vec3 planeNormal, glm::vec3 planePosition) {
+        // Calculate the direction vector of the line
+        glm::vec3 lineDirection = glm::normalize(lineEnd - lineStart);
+
+        // Calculate the dot product of the line direction and the plane normal
+        float dotProduct = glm::dot(lineDirection, planeNormal);
+
+        // If the dot product is zero, the line is parallel to the plane and there's no intersection
+        if (dotProduct == 0) {
+            return IntersectionPoint(glm::vec3(0, 0, 0), false);
+        }
+
+        // Calculate the distance from the line start to the plane
+        float distance = glm::dot(planePosition - lineStart, planeNormal) / dotProduct;
+
+        // Calculate the intersection point
+        glm::vec3 intersectionPoint = lineStart + lineDirection * distance;
+
+        return IntersectionPoint(intersectionPoint, true);
+    }
+
+    bool isPointWithinEdgeBounds(glm::vec3 point, glm::vec3 edgeStart, glm::vec3 edgeEnd) {
+    // Check if the point is within the bounds of the edge
+    return (point.x >= std::min(edgeStart.x, edgeEnd.x) && point.x <= std::max(edgeStart.x, edgeEnd.x) &&
+            point.y >= std::min(edgeStart.y, edgeEnd.y) && point.y <= std::max(edgeStart.y, edgeEnd.y) &&
+            point.z >= std::min(edgeStart.z, edgeEnd.z) && point.z <= std::max(edgeStart.z, edgeEnd.z));
     }
 };

@@ -23,6 +23,7 @@ public:
         glm::vec3 v0 = glm::vec3(vertices[0], vertices[1], vertices[2]);
         glm::vec3 v1 = glm::vec3(vertices[3], vertices[4], vertices[5]);
         normal = glm::normalize(glm::cross(v0, v1));
+        position = glm::vec3(0.0f);
 
         GLuint indices[] = {
             0, 2, 1, 

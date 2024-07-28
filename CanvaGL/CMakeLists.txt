@@ -76,11 +76,13 @@ file(COPY test/resources DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # include folder source
 include_directories(./source)
+file(GLOB_RECURSE SRC_FILES "source/*.cpp")
+file(GLOB_RECURSE TEST_FILES "test/unit/*.cpp")
 
 add_executable(
   sample_test
-  test/unit/sample.cpp
-  test/unit/objreadertest.cpp
+  ${SRC_FILES}
+  ${TEST_FILES}
 )
 # target_link_libraries(
 #   sample_test
