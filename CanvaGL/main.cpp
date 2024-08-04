@@ -140,8 +140,12 @@ void processInput(GLFWwindow* window) {
     //     cuboid2->getRelativeOrientation(cuboid);
     // }
 
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        rectangle->moveForward(0.01f);
+    }
+
     if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
-        test = false;
+        rectangle->moveForward(-0.01f);
     }
 }
 
@@ -206,10 +210,9 @@ int main(int argc, char** argv) {
 
 	// setup opengl options
 	glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-	// glEnable(GL_BLEND);
-	// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+    // glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
     // create program
@@ -225,8 +228,8 @@ int main(int argc, char** argv) {
     // GLuint cubemapTexture = generateCubeMapTexture();
     assert(glGetError()== GL_NO_ERROR);
 
-    cuboid = new Cuboid(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(2.0f, 2.0f, 2.0f), 
-    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
+    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(2.0f, 2.0f, 2.0f), 
+    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), false);
 
     // auto modelReader = ModelReaderFactory::createModelReader("resources/teapot.obj");
     // auto teapot = modelReader->loadModel();
@@ -235,9 +238,9 @@ int main(int argc, char** argv) {
     // cuboid2  = new Cuboid(glm::vec3(-1.5f, -3.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
     // glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
 
-    rectangle = new Rectangle(4.0f, 2.0f);
-    rectangle->setPosition(glm::vec3(6.0f, 6.0f, 6.0f));
-    rectangle->setNormal(glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f)));
+    rectangle = new Rectangle(12.0f, 12.0f);
+    rectangle->setPosition(glm::vec3(0.0f));
+    rectangle->setNormal(glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f)));
     assert(glGetError()== GL_NO_ERROR);
 
     InitFBO();
@@ -296,7 +299,7 @@ int main(int argc, char** argv) {
         // shader->setFloat("time", currentFrame * 4.0f);
 
         processInput(window);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // projection and view matrix

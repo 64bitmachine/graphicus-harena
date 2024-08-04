@@ -176,3 +176,51 @@ TEST_F(CuboidPlaneTest, ExplicitIntersection) {
     }
 }
 
+TEST_F(CuboidPlaneTest, InclinedPlaneIntersection) {
+    // Initialize the parameters for the Cuboid
+    glm::vec3 expectedCenter(0.0f, 0.0f, 0.0f);
+    glm::vec3 dimensions(2.0f, 2.0f, 2.0f); // length, breadth, height
+    glm::vec3 upVector(0.0f, 1.0f, 0.0f);
+    glm::vec3 rightVector(1.0f, 0.0f, 0.0f);
+
+    // Create a Cuboid object
+    cuboid = new Cuboid(expectedCenter, dimensions, upVector, rightVector);
+
+    float width = 2.0f;
+    float height = 2.0f;
+    rectangle = new Rectangle(width, height);
+
+    // Set the rectangle's position and normal to intersect with the cuboid at an angle
+    rectangle->setPosition(glm::vec3(0, 0, 0));
+    rectangle->setNormal(glm::vec3(1.0f, 1.0f, 1.0f)); // Normal vector pointing in the direction of (1, 1, 1)
+
+    // Get the intersection points
+    std::vector<glm::vec3> intersectionPoints = cuboid->cuboidPlaneIntersection(*rectangle);
+
+    // cuboid->printCuboidState();
+    // // print the intersection points
+    // for (const auto& point : intersectionPoints) {
+    //     std::cout << point.x << ", " << point.y << ", " << point.z << std::endl;
+    // }
+    // Check that there are intersection points
+    ASSERT_EQ(intersectionPoints.size(), 6);
+
+    // Check the intersection points (Note: These points may not be exactly on the plane due to floating point precision)
+    std::vector<glm::vec3> expectedPoints = {
+        glm::vec3(1.0f, 1.0f, -1.0f),
+        glm::vec3(1.0f, -1.0f, 1.0f),
+        glm::vec3(-1.0f, 1.0f, 1.0f),
+        glm::vec3(-1.0f, -1.0f, -1.0f)
+    };
+
+    for (const auto& point : intersectionPoints) {
+        bool found = false;
+        for (const auto& expectedPoint : expectedPoints) {
+            if (glm::all(glm::lessThanEqual(glm::abs(point - expectedPoint), glm::vec3(0.00001f)))) {
+                found = true;
+                break;
+            }
+        }
+        ASSERT_TRUE(found);
+    }
+}

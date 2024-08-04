@@ -59,12 +59,35 @@ public:
     }
 
     void nextFrame() override {
+        shader->setFloat("alpha", 0.6f);
+        shader->setVec3("color", glm::vec3(0.0f, 0.0f, 1.0f));
+        assert(glGetError() == GL_NO_ERROR);
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
 
-    void setNormal(glm::vec3 n) { normal = n; }
+    void setNormal(glm::vec3 n) { 
+        normal = glm::normalize(n);
+
+        *modelMat = glm::translate(glm::mat4(1.0f), position) * getRotationMatrix(normal);
+    }
+
+    glm::mat4 getRotationMatrix(glm::vec3 normal) {
+        // Normalize the normal vector
+        normal = glm::normalize(normal);
+
+        // Calculate the rotation axis
+        glm::vec3 rotationAxis = glm::cross(normal, glm::vec3(0, 0, 1));
+
+        // Calculate the rotation angle
+        float rotationAngle = -acos(glm::dot(normal, glm::vec3(0, 0, 1)));
+
+        // Create a rotation matrix
+        glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), rotationAngle, rotationAxis);
+
+        return rotationMatrix;
+    }
 
     glm::vec3 getNormal() { return normal; }
 
@@ -75,6 +98,11 @@ public:
     }
 
     glm::vec3 getPosition() { return position; }
+
+    void moveForward(float dist) {
+        position += normal * dist;
+        *modelMat = glm::translate(glm::mat4(1.0f), position) * getRotationMatrix(normal);
+    }
 };
 
 #endif // RECTANGLE_H

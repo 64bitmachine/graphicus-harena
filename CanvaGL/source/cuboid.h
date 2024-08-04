@@ -93,6 +93,8 @@ public:
     }
 
     void nextFrame() {
+        shader->setFloat("alpha", 1.0f);
+        shader->setVec3("color", glm::vec3(1.0f, 0.0f, 0.0f));
         // Bind VAO and draw
         glBindVertexArray(VAO);
         if (wireframe)
@@ -750,6 +752,7 @@ public:
         for (auto& edge : edges) {
             IntersectionPoint intersectionPoint = getIntersectionPoint(edge.first, edge.second, planeNormal, planePosition);
             if (intersectionPoint.isValid && isPointWithinEdgeBounds(intersectionPoint.point, edge.first, edge.second)) {
+                if (std::find(intersectionPoints.begin(), intersectionPoints.end(), intersectionPoint.point) == intersectionPoints.end())
                 intersectionPoints.push_back(intersectionPoint.point);
             }
         }
