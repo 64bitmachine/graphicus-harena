@@ -19,7 +19,6 @@
 #include "source/2d/Rectangle.h"
 #include "meshreader/modelreader.h"
 #include "meshreader/modelreaderfactory.h"
-#include "source/cloth/particle.h"
 
 float rippleTime = 0.0f;
 //ripple displacement speed
@@ -100,6 +99,7 @@ void InitFBO() {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
+
 glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
     float x,y,z;
     x = float((mouseX / SCR_WIDTH) * 2 - 1);
@@ -121,6 +121,7 @@ glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int sc
     
     return glm::vec3(pr.x, pr.y, pr.z);
 }
+
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -148,6 +149,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
+
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     if (firstMouse) {
         lastX = xpos;
@@ -167,6 +169,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     g_camera->process_mouse_scroll(yoffset);
 }
+
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     // mouse left click
@@ -209,18 +212,32 @@ int main(int argc, char** argv) {
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
+    // create program
+    // Shader* shader = new Shader("shaders/skybox.vs", "shaders/skybox.fs");
+    Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+    Shader* mirrorShader = new Shader("shaders/mirror.vs", "shaders/mirror.fs");
+    // Shader* texturedPlaneShader = new Shader("shaders/plane.vs", "shaders/plane.fs");
+    // Shader* rippleShader = new Shader("shaders/ripple.vs", "shaders/ripple.fs");
+    assert(glGetError()== GL_NO_ERROR);
+
+    // Skybox* skybox = new Skybox();
+    // GLuint checkerTexture = generateCheckerboardTexture();
+    // GLuint cubemapTexture = generateCubeMapTexture();
+    assert(glGetError()== GL_NO_ERROR);
+
+    cuboid = new Cuboid(glm::vec3(0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
+    glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), false);
+
+    auto modelReader = ModelReaderFactory::createModelReader("resources/teapot.obj");
+    auto teapot = modelReader->loadModel();
+    assert(glGetError()== GL_NO_ERROR);
+
+    // cuboid2  = new Cuboid(glm::vec3(-1.5f, -3.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 
+    // glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)), glm::normalize(glm::vec3(1.0, 0.0f, 0.0f)), true);
+
     rectangle = new Rectangle(1.0f, 1.0f);
     rectangle->setPosition(glm::vec3(0.0f, 0.0f, -2.0f));
     rectangle->setNormal(glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f)));
-    assert(glGetError()== GL_NO_ERROR);
-
-    // create program
-    Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-    assert(glGetError()== GL_NO_ERROR);
-
-    std::vector<Particle> particles;
-    particles.emplace_back(0.0f, 0.0f, -2.0f);
-
     assert(glGetError()== GL_NO_ERROR);
 
     InitFBO();
@@ -236,15 +253,38 @@ int main(int argc, char** argv) {
     float currentFrame;
     assert(glGetError()== GL_NO_ERROR);
 
+
+    cuboid->setShader(shader);
+    teapot->setShader(shader);
+    // cuboid->createAxes();
+    // cuboid2->setShader(shader);
+    // cuboid2->createAxes();
+    // skybox->setShader(shader);
+    // skybox->setTexture(cubemapTexture);
+    rectangle->setShader(mirrorShader);
+
+    // texturedPlane
+    // TexturedPlane* texturedPlane = new TexturedPlane(10, 10);
+    // texturedPlane->setShader(texturedPlaneShader);
+    // texturedPlane->setTexture(checkerTexture);
+
+    // Grid
+    // Grid* grid = new Grid(10, 10);
+    // grid->setShader(shader);
+
     Scene* scene = new Scene();
-    for(auto& particle: particles) {
-        particle.setShader(shader);
-        scene->add(&particle);
-    }
-    rectangle->setShader(shader);
+    // scene->add(texturedPlane);
+    // scene->add(skybox);
+    // scene->add(grid);
+    scene->add(cuboid);
+    scene->add(teapot.get());
+    // scene->add(cuboid2);
     // scene->add(rectangle);
     assert(glGetError()== GL_NO_ERROR);
 
+    // for(int i = 0; i < 50; i++) cuboid2->rotate(2);
+    // for(int i = 0; i < 20; i++) cuboid2->rotate(1);
+    
     do {
 
         // per-frame time logic
@@ -265,6 +305,45 @@ int main(int argc, char** argv) {
         view = g_camera->get_view_matrix();
         scene->render(&projection, &view);
 
+        // // ============== Mirror code =========================
+        // //store the current modelview matrix
+        // glm::mat4 MV = view * (*cuboid->modelMat);
+        // glm::mat4 oldMV = MV;
+
+        // //now change the view matrix to where the mirror is
+        // //reflect the view vector in the mirror normal direction
+        // glm::vec3 V = glm::vec3(-MV[2][0], -MV[2][1], -MV[2][2]);
+        // glm::vec3 R = glm::reflect(V, rectangle->getNormal());
+
+        // //place the virtual camera at the mirro position
+        // MV = glm::lookAt(rectangle->getPosition(), rectangle->getPosition() + R, glm::vec3(0,1,0));
+
+        // //since mirror image is laterally inverted, we multiply the MV matrix by (-1,1,1)
+        // MV = glm::scale(MV, glm::vec3(-1,1,1));
+
+        // //enable FBO 
+        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
+        // //render to colour attachment 0
+        // glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        // //clear the colour and depth buffers
+        // glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        // //show the mirror from the front side only
+        // if(glm::dot(V, rectangle->getNormal()) < 0) {
+        //     cuboid->render(&projection, &view);
+        // } 
+        
+        // //unbind the FBO
+        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        
+        // //restore the default back buffer 
+        // glDrawBuffer(GL_BACK_LEFT);
+
+        // //bind the FBO output at the current texture 
+        // glBindTexture(GL_TEXTURE_2D, renderTextureID);
+
+        // //render mirror
+        // rectangle->render(&projection, &view);
+        // // ====================================================
 
         glfwSwapBuffers(window);
         glfwPollEvents();
