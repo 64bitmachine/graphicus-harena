@@ -20,6 +20,7 @@
 #include "meshreader/modelreader.h"
 #include "meshreader/modelreaderfactory.h"
 #include "source/cloth/particle.h"
+#include "source/cloth/constraint.h"
 
 float rippleTime = 0.0f;
 //ripple displacement speed
@@ -178,6 +179,11 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 }
 
 
+const int ROW = 10;
+const int COL = 10;
+const float REST_DISTANCE = 0.5f;
+const float GRAVITY = -0.05f;
+
 int main(int argc, char** argv) {
 
     initCanvaGL();
@@ -218,16 +224,41 @@ int main(int argc, char** argv) {
     Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     assert(glGetError()== GL_NO_ERROR);
 
-    std::vector<Particle> particles;
-    particles.emplace_back(0.0f, 0.0f, -2.0f);
+    std::vector<Particle*> particles;
+    std::vector<Constraint> constraints;
+
+    // particles.emplace_back(0.0f, 0.0f, -2.0f, false);
+    for (int row = 0; row < ROW; row++) {
+        for (int col = 0; col < COL; col++) {
+            float x = -2.0f + col * REST_DISTANCE;
+            float y = row * REST_DISTANCE;
+            bool pinned = (row == ROW-1);
+            // std::cout << "x " << x << " y " << y << std::endl;
+            particles.push_back(new Particle(x, y, -2.0f, pinned));
+        }
+    }
+
+    // Initialize constraints
+    for (int row = 0; row < ROW; row++) {
+        for (int col = 0; col < COL; col++) {
+            if (col < COL - 1) {
+                // Horizontal constraint
+                constraints.emplace_back(particles[row * COL + col], particles[row * COL + col + 1]);
+            }
+            if (row < ROW - 1) {
+                // Vertical constraint
+                constraints.emplace_back(particles[row * COL + col], particles[(row + 1) * COL + col]);
+            }
+        }
+    }
 
     assert(glGetError()== GL_NO_ERROR);
 
-    InitFBO();
+    // InitFBO();
     assert(glGetError()== GL_NO_ERROR);
 
     // camera
-    g_camera = new Camera(glm::vec3(0.0f, 2.0f, 5.0f));
+    g_camera = new Camera(glm::vec3(0.0f, 2.0f, 10.0f));
 
     // projection and view matrix
     glm::mat4 projection;
@@ -238,8 +269,8 @@ int main(int argc, char** argv) {
 
     Scene* scene = new Scene();
     for(auto& particle: particles) {
-        particle.setShader(shader);
-        scene->add(&particle);
+        particle->setShader(shader);
+        scene->add(particle);
     }
     rectangle->setShader(shader);
     // scene->add(rectangle);
@@ -252,6 +283,13 @@ int main(int argc, char** argv) {
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+        //apply gravity and update particles
+        for (auto& particle : particles) {
+            particle->apply_force(glm::vec3(0, GRAVITY, 0));
+            particle->update(deltaTime);
+            particle->constrain_to_bounds(0, 0);
+        }
+
         // get time elapsed
         // shader->setFloat("time", currentFrame * 4.0f);
 
@@ -263,8 +301,10 @@ int main(int argc, char** argv) {
         projection = glm::perspective(glm::radians(g_camera->get_zoom()),
          (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         view = g_camera->get_view_matrix();
+        assert(glGetError()== GL_NO_ERROR);
         scene->render(&projection, &view);
 
+        assert(glGetError()== GL_NO_ERROR);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
