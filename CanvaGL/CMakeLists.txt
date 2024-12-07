@@ -40,7 +40,7 @@ include_directories("/opt/local/include/SOIL")
 link_directories("/opt/local/lib")
 
 add_executable(HelloWorld 
-main.cpp
+verlet_main.cpp
 source/camera.cpp
 source/shader.cpp)
 
@@ -49,7 +49,7 @@ file(COPY shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 if (APPLE)
     message("APPLE : Build for MacOS")
-    target_link_libraries(HelloWorld glfw GLEW::GLEW "-framework OpenGL" "/opt/local/lib/libSOIL.dylib")
+    target_link_libraries(HelloWorld -g glfw GLEW::GLEW "-framework OpenGL" "/opt/local/lib/libSOIL.dylib")
 else()
     message("LINUX : Build for Linux")
     target_link_libraries(HelloWorld ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLFW_LIBRARIES} ${GLM_LIBRARIES} glfw)

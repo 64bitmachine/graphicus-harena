@@ -24,11 +24,6 @@
 
 std::vector<Constraint*> constraints;
 
-
-Rectangle* rectangle = nullptr;
-Cuboid *cuboid = nullptr;
-// Cuboid *cuboid2 = nullptr;
-
 double mouseX = 0.0, clickReleaseX = 0.0;
 double mouseY = 0.0, clickReleaseY = 0.0;
 bool isMouseClicked = false;
@@ -39,10 +34,8 @@ float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 bool  firstMouse = true;
 bool isMouseCameraActive = false;
-bool rescaleCuboidUsingCornerPoint = false;
-bool cuboidMoveMode = false;
+
 Camera* g_camera;
-bool test = false;
 
 
 const unsigned int SCR_WIDTH = 800;
@@ -51,27 +44,6 @@ const unsigned int SCR_HEIGHT = 600;
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 
-glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
-    float x,y,z;
-    x = float((mouseX / SCR_WIDTH) * 2 - 1);
-    y = float(1 - (mouseY / SCR_HEIGHT) * 2);
-    glReadPixels(mouseX, mouseY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
-
-    printf("z value: %f\n", z);
-
-    glm::mat4 inv_projection = glm::inverse(projectionMatrix * viewMatrix);
-
-    glm::vec4 pr = inv_projection*glm::vec4(x,y,-z,1.0f);
-    pr = pr/pr.w;
-    glm::vec4 pr1 = inv_projection*glm::vec4(x,y,z,1.0f);
-    pr1 = pr1/pr1.w;
-    // cout << glm::to_string(pr) << endl;
-    // cout << glm::to_string(pr1) << endl;
-    pr = pr + glm::normalize(pr1-pr);
-    // glm::vec4 pos = inv_view*pr;
-    
-    return glm::vec3(pr.x, pr.y, pr.z);
-}
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -91,9 +63,6 @@ void processInput(GLFWwindow* window) {
             if (!constraints[i]->isHor && constraints[i]->rowId == 2 && constraints[i]->colId < 5) {
                 constraints[i]->deactivate();
             };
-            // if (constraints[i]->rowId == 2 && constraints[i]->colId == 0) {
-            //     constraints[i]->deactivate();
-            // };
         }
         
     }
@@ -164,15 +133,8 @@ int main(int argc, char** argv) {
 	// setup opengl options
 	glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-	// glEnable(GL_BLEND);
-	// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-
-    rectangle = new Rectangle(1.0f, 1.0f);
-    rectangle->setPosition(glm::vec3(0.0f, 0.0f, -2.0f));
-    rectangle->setNormal(glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f)));
-    assert(glGetError()== GL_NO_ERROR);
 
     // create program
     Shader* shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
@@ -214,9 +176,6 @@ int main(int argc, char** argv) {
 
     assert(glGetError()== GL_NO_ERROR);
 
-    // InitFBO();
-    assert(glGetError()== GL_NO_ERROR);
-
     // camera
     g_camera = new Camera(glm::vec3(0.0f, 2.0f, 10.0f));
 
@@ -232,7 +191,6 @@ int main(int argc, char** argv) {
         particle->setShader(shader);
         scene->add(particle);
     }
-    rectangle->setShader(shader);
 
     for(auto& constraint: constraints) {
         constraint->setShader(shader);
