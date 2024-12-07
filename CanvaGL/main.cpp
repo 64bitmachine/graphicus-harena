@@ -22,9 +22,8 @@
 #include "source/cloth/particle.h"
 #include "source/cloth/constraint.h"
 
-float rippleTime = 0.0f;
-//ripple displacement speed
-// const float SPEED = 2;
+std::vector<Constraint*> constraints;
+
 
 Rectangle* rectangle = nullptr;
 Cuboid *cuboid = nullptr;
@@ -51,55 +50,6 @@ const unsigned int SCR_HEIGHT = 600;
 
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
-
-//FBO and render buffer object ID
-GLuint fboID, rbID;
-
-//offscreen render texture ID
-GLuint renderTextureID;
-
-//initialize FBO
-void InitFBO() {
-	//generate and bind fbo ID
-	glGenFramebuffers(1, &fboID);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
-
-	//generate and bind render buffer ID
-	glGenRenderbuffers(1, &rbID);
-	glBindRenderbuffer(GL_RENDERBUFFER, rbID);
-
-	//set the render buffer storage
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, SCR_WIDTH, SCR_HEIGHT);
-
-	//generate the offscreen texture
-	glGenTextures(1, &renderTextureID);
-	glBindTexture(GL_TEXTURE_2D, renderTextureID);
-
-	//set texture parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, SCR_WIDTH, SCR_HEIGHT, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
-
-	//bind the renderTextureID as colour attachment of FBO
-	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTextureID, 0);
-	//set the render buffer as the depth attachment of FBO
-	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_RENDERBUFFER, rbID);
-
-	//check for frame buffer completeness status
-	GLuint status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
-
-	if(status==GL_FRAMEBUFFER_COMPLETE) {
-		printf("FBO setup succeeded.\n");
-	} else {
-		printf("Error in FBO setup.\n");
-	}
-
-	//unbind the texture and FBO
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-}
 
 glm::vec3 screenToWorld(GLFWwindow* window, double mouseX, double mouseY, int screenWidth, int screenHeight, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
     float x,y,z;
@@ -135,13 +85,17 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         g_camera->process_keyboard(RIGHT, deltaTime);
 
-    // if (test == false && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
-    //     test = true;
-    //     cuboid2->getRelativeOrientation(cuboid);
-    // }
-
     if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
-        test = false;
+        // deactivate some constraints
+        for (int i = 0; i < constraints.size(); i++) {
+            if (!constraints[i]->isHor && constraints[i]->rowId == 2 && constraints[i]->colId < 5) {
+                constraints[i]->deactivate();
+            };
+            // if (constraints[i]->rowId == 2 && constraints[i]->colId == 0) {
+            //     constraints[i]->deactivate();
+            // };
+        }
+        
     }
 }
 
@@ -225,7 +179,6 @@ int main(int argc, char** argv) {
     assert(glGetError()== GL_NO_ERROR);
 
     std::vector<Particle*> particles;
-    std::vector<Constraint> constraints;
 
     // particles.emplace_back(0.0f, 0.0f, -2.0f, false);
     for (int row = 0; row < ROW; row++) {
@@ -243,11 +196,18 @@ int main(int argc, char** argv) {
         for (int col = 0; col < COL; col++) {
             if (col < COL - 1) {
                 // Horizontal constraint
-                constraints.emplace_back(particles[row * COL + col], particles[row * COL + col + 1]);
+                Constraint *con = new Constraint(particles[row * COL + col], particles[row * COL + col + 1]);
+                con->rowId = row;
+                con->colId = col;
+                con->isHor = true;
+                constraints.push_back(con);
             }
             if (row < ROW - 1) {
                 // Vertical constraint
-                constraints.emplace_back(particles[row * COL + col], particles[(row + 1) * COL + col]);
+                Constraint *con = new Constraint(particles[row * COL + col], particles[(row + 1) * COL + col]);
+                con->rowId = row;
+                con->colId = col;
+                constraints.push_back(con);
             }
         }
     }
@@ -273,7 +233,12 @@ int main(int argc, char** argv) {
         scene->add(particle);
     }
     rectangle->setShader(shader);
-    // scene->add(rectangle);
+
+    for(auto& constraint: constraints) {
+        constraint->setShader(shader);
+        scene->add(constraint);
+    }
+
     assert(glGetError()== GL_NO_ERROR);
 
     do {
@@ -286,12 +251,13 @@ int main(int argc, char** argv) {
         //apply gravity and update particles
         for (auto& particle : particles) {
             particle->apply_force(glm::vec3(0, GRAVITY, 0));
-            particle->update(deltaTime);
-            particle->constrain_to_bounds(0, 0);
+            particle->update(3*deltaTime);
+            particle->constrain_to_bounds(0, -2);
         }
 
-        // get time elapsed
-        // shader->setFloat("time", currentFrame * 4.0f);
+        for (auto& constraint : constraints) {
+            constraint->satisfy();
+        }
 
         processInput(window);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
